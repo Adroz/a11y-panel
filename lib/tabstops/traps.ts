@@ -10,7 +10,7 @@ const FOCUS_TRAP_DATA_ATTRS = ['data-focus-trap', 'data-focus-lock'];
 
 const FOCUS_TRAP_CLASS_PATTERNS = ['focus-trap', 'focus-lock'];
 
-function generateSelector(element: Element): string {
+export function generateSelector(element: Element): string {
   if (element.id) {
     return `#${CSS.escape(element.id)}`;
   }

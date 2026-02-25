@@ -10,6 +10,15 @@ export interface FocusTrapInfo {
   tabStopIndices: number[];
 }
 
+export interface SerializedTabStop {
+  index: number;
+  selector: string;
+  tagName: string;
+  accessibleName: string;
+  role: string;
+  trapSelector: string | null;
+}
+
 // Side Panel → Background → Content Script
 export type RequestMessage =
   | { type: "RUN_AXE_SCAN" }
@@ -17,7 +26,10 @@ export type RequestMessage =
   | { type: "HIGHLIGHT_ALL"; targets: HighlightTarget[] }
   | { type: "CLEAR_HIGHLIGHTS" }
   | { type: "ENABLE_TAB_STOPS" }
-  | { type: "DISABLE_TAB_STOPS" };
+  | { type: "DISABLE_TAB_STOPS" }
+  | { type: "HIGHLIGHT_TAB_STOP"; selector: string }
+  | { type: "CLEAR_TAB_STOP_HIGHLIGHT" }
+  | { type: "REORDER_TAB_STOPS"; order: string[] };
 
 // Content Script → Background → Side Panel
 export type ResponseMessage =
@@ -27,8 +39,11 @@ export type ResponseMessage =
   | { type: "HIGHLIGHT_APPLIED"; selector: string }
   | { type: "HIGHLIGHTS_APPLIED"; count: number }
   | { type: "HIGHLIGHTS_CLEARED" }
-  | { type: "TAB_STOPS_ENABLED"; count: number; traps: FocusTrapInfo[] }
+  | { type: "TAB_STOPS_ENABLED"; count: number; traps: FocusTrapInfo[]; stops: SerializedTabStop[] }
   | { type: "TAB_STOPS_DISABLED" }
-  | { type: "TAB_STOPS_ERROR"; error: string };
+  | { type: "TAB_STOPS_ERROR"; error: string }
+  | { type: "TAB_STOP_HIGHLIGHTED" }
+  | { type: "TAB_STOP_HIGHLIGHT_CLEARED" }
+  | { type: "TAB_STOPS_REORDERED" };
 
 export type Message = RequestMessage | ResponseMessage;

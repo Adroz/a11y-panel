@@ -8,14 +8,17 @@ import { HighlightToggle } from "@/components/scan/HighlightToggle";
 import { ScanHistory } from "@/components/scan/ScanHistory";
 import { ViolationList } from "@/components/results/ViolationList";
 import { TabStopsToggle } from "@/components/scan/TabStopsToggle";
+import { TabStopList } from "@/components/tabstops/TabStopList";
 import { ChecklistView } from "@/components/checklist/ChecklistView";
 import { ExportButtons } from "@/components/scan/ExportButtons";
 import { useScanStore } from "@/hooks/use-scan";
+import { useTabStopsStore } from "@/hooks/use-tab-stops";
 
 export function App() {
   const [activeTab, setActiveTab] = useState<Tab>("scan");
   const status = useScanStore((s) => s.status);
   const error = useScanStore((s) => s.error);
+  const tabStopsStatus = useTabStopsStore((s) => s.status);
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50">
@@ -52,11 +55,14 @@ export function App() {
         {activeTab === "tabstops" && (
           <>
             <TabStopsToggle />
-            <p className="text-xs text-zinc-400">
-              Visualises the keyboard tab order on the current page. Numbered
-              circles show each focusable element, connected by lines showing
-              the navigation sequence.
-            </p>
+            {tabStopsStatus === "on" && <TabStopList />}
+            {tabStopsStatus !== "on" && (
+              <p className="text-xs text-zinc-400">
+                Visualises the keyboard tab order on the current page. Numbered
+                circles show each focusable element, connected by lines showing
+                the navigation sequence.
+              </p>
+            )}
           </>
         )}
 

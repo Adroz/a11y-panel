@@ -101,3 +101,48 @@ Click-to-inspect any element and view its accessibility properties.
 - [ ] States & properties (`aria-expanded`, `aria-required`, `aria-checked`, etc.)
 - [ ] Focusable / in tab order
 - [ ] Missing required properties (e.g. `role="checkbox"` without `aria-checked`)
+
+## Phase 9 — Checklist Improvements
+
+Refine the manual checklist UX and workflow.
+
+- [ ] Per-page checklist state (track progress per URL)
+- [ ] Better auto-populate accuracy and feedback
+- [ ] Checklist export integration (include in HTML/JSON reports)
+
+## Phase 10 — Issue Navigator & Auto-Rescan
+
+Streamline the scan workflow with guided issue navigation and automatic re-scanning.
+
+- [ ] Step-by-step issue stepper — walk through violations one at a time, scrolling to each on the page
+- [ ] Re-scan on page navigation — detect URL changes, prompt or auto-rescan
+
+## Phase 11 — Manual Tab Stops ✅
+
+Interactive tab stop list with reorder, highlight, and export.
+
+- [x] Serialize tab stops with accessible name, role, and trap membership
+- [x] Side panel list with numbered rows, click-to-highlight, and scroll-into-view
+- [x] Prev/Next stepping through tab stops
+- [x] Focus trap grouping with red accent in the list
+- [x] Pointer-based drag-to-reorder with live gap preview and renumbered items
+- [x] Keyboard reorder (up/down buttons)
+- [x] Overlay circle highlight and pulsing ring on selected element
+- [x] Auto-select moved item after reorder
+- [x] JSON export of tab stop order with selectors, roles, and trap info
+
+## Phase 12 — Plain Language Mode
+
+Make results accessible to non-technical users.
+
+- [ ] Technical / non-technical toggle (persisted to storage)
+- [ ] Simplified violation descriptions and fix suggestions
+- [ ] Reduce jargon in checklist testing instructions
+
+## Phase 13 — Quality of Life
+
+Keyboard navigation, export improvements, and extension settings.
+
+- [ ] Keyboard navigation within the side panel (arrow keys, focus management)
+- [ ] AI-friendly export format (structured for pasting into LLM prompts)
+- [ ] Extension options page (when there's enough config to justify it)

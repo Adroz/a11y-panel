@@ -12,6 +12,9 @@ const LINE_DASH = '6 4';
 const LINE_WIDTH = 2;
 const TRAP_BORDER_COLOR = 'rgba(211, 47, 47, 0.6)';
 const TRAP_LABEL_BG = 'rgba(211, 47, 47, 0.85)';
+const ACTIVE_CIRCLE_COLOR = '#e65100';
+const HIGHLIGHT_RING_COLOR = '#1565c0';
+const HIGHLIGHT_RING_ID = 'a11y-panel-highlight-ring';
 
 function injectStyles(): void {
   if (document.getElementById(STYLE_ID)) return;
@@ -77,6 +80,28 @@ function injectStyles(): void {
       z-index: 2147483642;
       line-height: 1.4;
     }
+
+    .a11y-tabstop-circle-active {
+      background: ${ACTIVE_CIRCLE_COLOR} !important;
+      transform: scale(1.35);
+      box-shadow: 0 0 0 3px rgba(230, 81, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    #${HIGHLIGHT_RING_ID} {
+      position: absolute;
+      border: 3px solid ${HIGHLIGHT_RING_COLOR};
+      border-radius: 4px;
+      pointer-events: none;
+      z-index: 2147483639;
+      box-sizing: border-box;
+      animation: a11y-highlight-pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes a11y-highlight-pulse {
+      0%, 100% { border-color: ${HIGHLIGHT_RING_COLOR}; box-shadow: 0 0 0 0 rgba(21, 101, 192, 0.4); }
+      50% { border-color: ${HIGHLIGHT_RING_COLOR}; box-shadow: 0 0 0 6px rgba(21, 101, 192, 0); }
+    }
   `;
 
   document.head.appendChild(style);
@@ -136,6 +161,7 @@ function renderCircles(
 
     const circle = document.createElement('div');
     circle.className = 'a11y-tabstop-circle';
+    circle.setAttribute('data-stop-index', String(tabStop.index));
     circle.style.left = `${pos.x}px`;
     circle.style.top = `${pos.y}px`;
     circle.textContent = String(tabStop.index);
@@ -227,6 +253,38 @@ export function hideTabStopOverlay(): void {
   const existing = document.getElementById(OVERLAY_ID);
   if (existing) existing.remove();
   removeStyles();
+}
+
+export function highlightTabStopCircle(index: number | null): void {
+  // Clear all active circles
+  const overlay = document.getElementById(OVERLAY_ID);
+  if (!overlay) return;
+
+  for (const el of Array.from(overlay.querySelectorAll('.a11y-tabstop-circle-active'))) {
+    el.classList.remove('a11y-tabstop-circle-active');
+  }
+
+  if (index !== null) {
+    const circle = overlay.querySelector(`[data-stop-index="${index}"]`);
+    if (circle) circle.classList.add('a11y-tabstop-circle-active');
+  }
+}
+
+export function showHighlightRing(element: Element): void {
+  clearHighlightRing();
+  const rect = element.getBoundingClientRect();
+  const ring = document.createElement('div');
+  ring.id = HIGHLIGHT_RING_ID;
+  ring.style.left = `${rect.left + window.scrollX - 4}px`;
+  ring.style.top = `${rect.top + window.scrollY - 4}px`;
+  ring.style.width = `${rect.width + 8}px`;
+  ring.style.height = `${rect.height + 8}px`;
+  document.body.appendChild(ring);
+}
+
+export function clearHighlightRing(): void {
+  const existing = document.getElementById(HIGHLIGHT_RING_ID);
+  if (existing) existing.remove();
 }
 
 export function isOverlayVisible(): boolean {

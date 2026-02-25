@@ -3,7 +3,6 @@ import { useTabStopsStore } from "@/hooks/use-tab-stops";
 export function TabStopsToggle() {
   const status = useTabStopsStore((s) => s.status);
   const count = useTabStopsStore((s) => s.count);
-  const traps = useTabStopsStore((s) => s.traps);
   const error = useTabStopsStore((s) => s.error);
   const toggle = useTabStopsStore((s) => s.toggle);
 
@@ -44,23 +43,6 @@ export function TabStopsToggle() {
           <p className="text-sm text-blue-700">
             <span className="font-semibold">{count}</span> tab stop{count !== 1 && "s"} found
           </p>
-
-          {traps.length > 0 && (
-            <div className="mt-2 space-y-1">
-              {traps.map((trap, i) => (
-                <div
-                  key={i}
-                  className="rounded border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-700"
-                >
-                  <span className="font-medium">Focus trap detected</span>
-                  <span className="text-red-500">
-                    {" "}— {trap.tabStopIndices.length} stops in{" "}
-                    <code className="rounded bg-red-100 px-1">{trap.selector}</code>
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       )}
 
