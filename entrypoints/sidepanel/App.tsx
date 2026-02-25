@@ -10,6 +10,7 @@ import { ScanHistory } from "@/components/scan/ScanHistory";
 import { ViolationList } from "@/components/results/ViolationList";
 import { TabStopsToggle } from "@/components/scan/TabStopsToggle";
 import { ChecklistView } from "@/components/checklist/ChecklistView";
+import { ExportButtons } from "@/components/scan/ExportButtons";
 import { useScanStore } from "@/hooks/use-scan";
 
 export function App() {
@@ -40,6 +41,7 @@ export function App() {
             {status === "complete" && <FilterBar />}
 
             <ViolationList />
+            <ExportButtons />
             <ScanHistory />
 
             {status === "idle" && (

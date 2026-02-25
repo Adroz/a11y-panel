@@ -22,6 +22,14 @@ export default defineBackground(() => {
       }
     },
   );
+
+  // Keyboard shortcut handler
+  chrome.commands.onCommand.addListener((command) => {
+    if (command === "run-scan") {
+      // Trigger a scan by sending a message that the side panel can pick up
+      chrome.runtime.sendMessage({ type: "RUN_AXE_SCAN" }).catch(() => {});
+    }
+  });
 });
 
 async function forwardToActiveTab(message: Message, sendResponse: (r: ResponseMessage) => void) {
@@ -56,13 +64,14 @@ async function forwardToActiveTab(message: Message, sendResponse: (r: ResponseMe
 
     const response = await chrome.tabs.sendMessage(tab.id, message);
 
-    // Persist scan results to history
+    // Persist scan results to history and update badge
     if (response?.type === "SCAN_COMPLETE") {
       saveToHistory({
         violations: response.violations,
         url: response.url,
         timestamp: response.timestamp,
       });
+      updateBadge(response.violations.length, tab.id);
     }
 
     sendResponse(response);
@@ -71,5 +80,15 @@ async function forwardToActiveTab(message: Message, sendResponse: (r: ResponseMe
       type: "SCAN_ERROR",
       error: err instanceof Error ? err.message : String(err),
     });
+  }
+}
+
+function updateBadge(violationCount: number, tabId: number) {
+  if (violationCount > 0) {
+    chrome.action.setBadgeText({ text: String(violationCount), tabId });
+    chrome.action.setBadgeBackgroundColor({ color: "#d32f2f", tabId });
+  } else {
+    chrome.action.setBadgeText({ text: "✓", tabId });
+    chrome.action.setBadgeBackgroundColor({ color: "#2e7d32", tabId });
   }
 }

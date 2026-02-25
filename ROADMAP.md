@@ -48,13 +48,23 @@ Guided manual accessibility assessment.
 - [x] Pass/fail/not-applicable status tracking, persisted to chrome.storage
 - [x] Progress bar with per-principle breakdown
 
-## Phase 5 — Export & Polish
+## Phase 5 — Export & Polish ✅
 
 Production readiness.
 
-- [ ] HTML report export
-- [ ] JSON report export
-- [ ] Extension options page (scan configuration, theme)
-- [ ] Keyboard shortcuts
-- [ ] Badge showing violation count on extension icon
-- [ ] Polished extension icons
+- [x] HTML report export (self-contained styled report with violations + checklist)
+- [x] JSON report export
+- [x] Keyboard shortcut (Alt+Shift+A to run scan)
+- [x] Badge showing violation count on extension icon (red for issues, green checkmark for clean)
+- [x] Polished extension icons (shield with checkmark)
+- [ ] Extension options page (deferred — no meaningful config to expose yet)
+
+## Phase 6 — Checklist Improvements
+
+Refine the manual checklist UX and workflow.
+
+- [ ] Improved checklist navigation and flow
+- [ ] Better auto-populate accuracy and feedback
+- [ ] Per-page checklist state (track progress per URL)
+- [ ] Checklist export integration (include in HTML/JSON reports)
+- [ ] UX refinements based on real-world testing

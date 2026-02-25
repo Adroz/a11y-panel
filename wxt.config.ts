@@ -13,6 +13,14 @@ export default defineConfig({
     action: {
       default_title: "Open A11y Panel",
     },
+    commands: {
+      "run-scan": {
+        suggested_key: {
+          default: "Alt+Shift+A",
+        },
+        description: "Run accessibility scan on current page",
+      },
+    },
   },
   vite: () => ({
     plugins: [tailwindcss()],
