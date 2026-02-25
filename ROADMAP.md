@@ -29,13 +29,14 @@ Richer scan results, filtering, and history.
 - [x] ~~Group violations by rule~~ (removed — violations already grouped by rule in the card view)
 - [x] Scan history with delta comparison (new/fixed issues between scans)
 
-## Phase 3 — Tab Stops
+## Phase 3 — Tab Stops ✅
 
 Visualise keyboard navigation order.
 
-- [ ] Tab stops mode — numbered circles rendered at each focusable element
-- [ ] SVG overlay connecting sequential tab stops
-- [ ] Focus trap detection and warnings
+- [x] Tab stops mode — numbered circles rendered at each focusable element
+- [x] SVG overlay connecting sequential tab stops
+- [x] Focus trap detection and warnings
+- [x] Side panel nav with Scan / Tab Stops tabs
 
 ## Phase 4 — Manual Checklist
 

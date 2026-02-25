@@ -13,6 +13,8 @@ export default defineBackground(() => {
         case "HIGHLIGHT_ELEMENT":
         case "HIGHLIGHT_ALL":
         case "CLEAR_HIGHLIGHTS":
+        case "ENABLE_TAB_STOPS":
+        case "DISABLE_TAB_STOPS":
           forwardToActiveTab(message, sendResponse);
           return true; // async
         default:

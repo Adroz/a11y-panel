@@ -1,5 +1,11 @@
 import { FAST_PASS_CONFIG, mapAxeResults } from "@/lib/scanner";
 import { highlightElement, highlightAll, clearHighlights } from "@/lib/highlighter";
+import {
+  getTabStops,
+  detectFocusTraps,
+  showTabStopOverlay,
+  hideTabStopOverlay,
+} from "@/lib/tabstops";
 import type { Message, ResponseMessage } from "@/types/messages";
 
 export default defineContentScript({
@@ -13,7 +19,7 @@ export default defineContentScript({
         switch (message.type) {
           case "RUN_AXE_SCAN":
             handleScan(sendResponse);
-            return true; // keep channel open for async response
+            return true;
 
           case "HIGHLIGHT_ELEMENT":
             highlightElement(message.selector, message.impact);
@@ -29,6 +35,15 @@ export default defineContentScript({
           case "CLEAR_HIGHLIGHTS":
             clearHighlights();
             sendResponse({ type: "HIGHLIGHTS_CLEARED" });
+            return false;
+
+          case "ENABLE_TAB_STOPS":
+            handleEnableTabStops(sendResponse);
+            return false;
+
+          case "DISABLE_TAB_STOPS":
+            hideTabStopOverlay();
+            sendResponse({ type: "TAB_STOPS_DISABLED" });
             return false;
 
           default:
@@ -54,6 +69,29 @@ async function handleScan(sendResponse: (r: ResponseMessage) => void) {
   } catch (err) {
     sendResponse({
       type: "SCAN_ERROR",
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+function handleEnableTabStops(sendResponse: (r: ResponseMessage) => void) {
+  try {
+    const tabStops = getTabStops();
+    const traps = detectFocusTraps(tabStops);
+
+    showTabStopOverlay(tabStops, traps);
+
+    sendResponse({
+      type: "TAB_STOPS_ENABLED",
+      count: tabStops.length,
+      traps: traps.map((t) => ({
+        selector: t.selector,
+        tabStopIndices: t.tabStopIndices,
+      })),
+    });
+  } catch (err) {
+    sendResponse({
+      type: "TAB_STOPS_ERROR",
       error: err instanceof Error ? err.message : String(err),
     });
   }
