@@ -70,7 +70,7 @@ export function ViolationCard({ violation }: ViolationCardProps) {
                     <p className="mb-2 text-xs text-zinc-500">{node.failureSummary}</p>
                   )}
                   <button
-                    onClick={() => setHighlighted(isHighlighted ? null : selector)}
+                    onClick={() => setHighlighted(isHighlighted ? null : selector, violation.impact)}
                     className={`cursor-pointer rounded px-2 py-1 text-xs font-medium transition-colors ${
                       isHighlighted
                         ? "bg-red-100 text-red-700"

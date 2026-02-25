@@ -18,16 +18,16 @@ Scan the current page, display violations, highlight problem elements.
 - [x] Extension icons (placeholder)
 - [x] MIT LICENSE + THIRD-PARTY-NOTICES.md
 
-## Phase 2 — Enhanced Results
+## Phase 2 — Enhanced Results ✅
 
 Richer scan results, filtering, and history.
 
-- [ ] Persistent highlight mode (toggle all violations visible at once)
-- [ ] Colour-coded highlights by impact level
-- [ ] Filter violations by impact level
-- [ ] Filter violations by WCAG category
-- [ ] Group violations by rule (e.g. 15 missing alt texts = 1 group with count)
-- [ ] Scan history with delta comparison (new/fixed issues between scans)
+- [x] Persistent highlight mode (toggle all violations visible at once)
+- [x] Colour-coded highlights by impact level (critical=red, serious=orange, moderate=amber, minor=blue)
+- [x] Filter violations by impact level
+- [x] Filter violations by WCAG category (2.0 A, 2.0 AA, 2.1 AA, 2.2 AA, Best Practice)
+- [x] ~~Group violations by rule~~ (removed — violations already grouped by rule in the card view)
+- [x] Scan history with delta comparison (new/fixed issues between scans)
 
 ## Phase 3 — Tab Stops
 

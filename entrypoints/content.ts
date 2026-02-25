@@ -1,11 +1,11 @@
 import { FAST_PASS_CONFIG, mapAxeResults } from "@/lib/scanner";
-import { highlightElement, clearHighlights } from "@/lib/highlighter";
+import { highlightElement, highlightAll, clearHighlights } from "@/lib/highlighter";
 import type { Message, ResponseMessage } from "@/types/messages";
 
 export default defineContentScript({
   matches: ["<all_urls>"],
   runAt: "document_idle",
-  main() {
+  main(_ctx) {
     (window as any).__a11yPanelReady = true;
 
     chrome.runtime.onMessage.addListener(
@@ -16,13 +16,22 @@ export default defineContentScript({
             return true; // keep channel open for async response
 
           case "HIGHLIGHT_ELEMENT":
-            highlightElement(message.selector);
+            highlightElement(message.selector, message.impact);
             sendResponse({ type: "HIGHLIGHT_APPLIED", selector: message.selector });
             return false;
+
+          case "HIGHLIGHT_ALL": {
+            const count = highlightAll(message.targets);
+            sendResponse({ type: "HIGHLIGHTS_APPLIED", count });
+            return false;
+          }
 
           case "CLEAR_HIGHLIGHTS":
             clearHighlights();
             sendResponse({ type: "HIGHLIGHTS_CLEARED" });
+            return false;
+
+          default:
             return false;
         }
       },

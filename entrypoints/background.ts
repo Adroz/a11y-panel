@@ -1,36 +1,21 @@
 import type { Message, ResponseMessage } from "@/types/messages";
+import { saveToHistory } from "@/lib/history";
 
 export default defineBackground(() => {
   // Open side panel when extension icon is clicked
-  chrome.action.onClicked.addListener((tab) => {
-    if (tab.windowId != null) {
-      chrome.sidePanel.open({ windowId: tab.windowId });
-    }
-  });
-
-  // Enable side panel to open on action click
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 
   // Route messages between side panel and content script
   chrome.runtime.onMessage.addListener(
-    (message: Message, sender, sendResponse: (r: ResponseMessage) => void) => {
+    (message: Message, _sender, sendResponse: (r: ResponseMessage) => void) => {
       switch (message.type) {
-        // Requests from the side panel → forward to active tab's content script
         case "RUN_AXE_SCAN":
         case "HIGHLIGHT_ELEMENT":
+        case "HIGHLIGHT_ALL":
         case "CLEAR_HIGHLIGHTS":
           forwardToActiveTab(message, sendResponse);
           return true; // async
-
-        // Responses from content script → store results if scan complete
-        case "SCAN_COMPLETE":
-          chrome.storage.local.set({
-            lastScan: {
-              violations: message.violations,
-              url: message.url,
-              timestamp: message.timestamp,
-            },
-          });
+        default:
           return false;
       }
     },
@@ -45,17 +30,21 @@ async function forwardToActiveTab(message: Message, sendResponse: (r: ResponseMe
       return;
     }
 
-    // Ensure content script is injected
+    // Check if content script is loaded on this page
     try {
-      await chrome.scripting.executeScript({
+      const [{ result: isReady }] = await chrome.scripting.executeScript({
         target: { tabId: tab.id },
-        func: () => {
-          // Check if content script already present
-          return (window as any).__a11yPanelReady === true;
-        },
+        func: () => (window as any).__a11yPanelReady === true,
       });
+
+      if (!isReady) {
+        sendResponse({
+          type: "SCAN_ERROR",
+          error: "Content script not loaded. Try refreshing the page.",
+        });
+        return;
+      }
     } catch {
-      // If we can't execute on this page (e.g. chrome:// pages)
       sendResponse({
         type: "SCAN_ERROR",
         error: "Cannot scan this page. Try a regular web page.",
@@ -64,6 +53,16 @@ async function forwardToActiveTab(message: Message, sendResponse: (r: ResponseMe
     }
 
     const response = await chrome.tabs.sendMessage(tab.id, message);
+
+    // Persist scan results to history
+    if (response?.type === "SCAN_COMPLETE") {
+      saveToHistory({
+        violations: response.violations,
+        url: response.url,
+        timestamp: response.timestamp,
+      });
+    }
+
     sendResponse(response);
   } catch (err) {
     sendResponse({

@@ -1,6 +1,10 @@
 import { PanelHeader } from "@/components/layout/PanelHeader";
 import { ScanButton } from "@/components/scan/ScanButton";
 import { ScanSummary } from "@/components/scan/ScanSummary";
+import { ScanDeltaCard } from "@/components/scan/ScanDelta";
+import { FilterBar } from "@/components/scan/FilterBar";
+import { HighlightToggle } from "@/components/scan/HighlightToggle";
+import { ScanHistory } from "@/components/scan/ScanHistory";
 import { ViolationList } from "@/components/results/ViolationList";
 import { useScanStore } from "@/hooks/use-scan";
 
@@ -22,7 +26,13 @@ export function App() {
         )}
 
         <ScanSummary />
+        <ScanDeltaCard />
+        <HighlightToggle />
+
+        {status === "complete" && <FilterBar />}
+
         <ViolationList />
+        <ScanHistory />
 
         {status === "idle" && (
           <p className="text-center text-sm text-zinc-400 pt-8">

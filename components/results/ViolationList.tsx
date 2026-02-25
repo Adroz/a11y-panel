@@ -1,15 +1,20 @@
-import { useScanStore } from "@/hooks/use-scan";
+import { useScanStore, useFilteredViolations } from "@/hooks/use-scan";
 import { ViolationCard } from "./ViolationCard";
 
 export function ViolationList() {
-  const violations = useScanStore((s) => s.violations);
   const status = useScanStore((s) => s.status);
+  const allViolations = useScanStore((s) => s.violations);
+  const filtered = useFilteredViolations();
 
-  if (status !== "complete" || violations.length === 0) return null;
+  if (status !== "complete" || allViolations.length === 0) return null;
 
   return (
     <div className="space-y-2">
-      {violations.map((v) => (
+      <span className="text-xs text-zinc-500">
+        {filtered.length} of {allViolations.length} rule{allViolations.length !== 1 && "s"}
+      </span>
+
+      {filtered.map((v) => (
         <ViolationCard key={v.id} violation={v} />
       ))}
     </div>
