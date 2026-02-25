@@ -1,7 +1,7 @@
 {
-  "name": "a11y-panel",
+  "name": "a11y-checker",
   "version": "0.1.0",
-  "description": "Chrome Side Panel accessibility testing extension powered by axe-core",
+  "description": "Chrome Side Panel accessibility checker powered by axe-core",
   "private": true,
   "type": "module",
   "scripts": {

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { PanelHeader } from "@/components/layout/PanelHeader";
 import { PanelNav, type Tab } from "@/components/layout/PanelNav";
-import { ScanButton } from "@/components/scan/ScanButton";
 import { ScanSummary } from "@/components/scan/ScanSummary";
 import { ScanDeltaCard } from "@/components/scan/ScanDelta";
 import { FilterBar } from "@/components/scan/FilterBar";
@@ -26,8 +25,6 @@ export function App() {
       <main className="flex-1 space-y-3 p-4">
         {activeTab === "scan" && (
           <>
-            <ScanButton />
-
             {error && (
               <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
                 {error}
@@ -46,7 +43,7 @@ export function App() {
 
             {status === "idle" && (
               <p className="text-center text-sm text-zinc-400 pt-8">
-                Click "Scan Page" to check for accessibility issues.
+                Run a scan to check for accessibility issues.
               </p>
             )}
           </>

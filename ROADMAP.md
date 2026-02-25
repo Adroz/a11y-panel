@@ -59,12 +59,45 @@ Production readiness.
 - [x] Polished extension icons (shield with checkmark)
 - [ ] Extension options page (deferred — no meaningful config to expose yet)
 
-## Phase 6 — Checklist Improvements
+## Phase 6 — Rename & UI Polish ✅
 
-Refine the manual checklist UX and workflow.
+Rebrand to A11y Checker and refine violation card UX.
 
-- [ ] Improved checklist navigation and flow
-- [ ] Better auto-populate accuracy and feedback
-- [ ] Per-page checklist state (track progress per URL)
-- [ ] Checklist export integration (include in HTML/JSON reports)
-- [ ] UX refinements based on real-world testing
+- [x] Rename all user-visible references from "A11y Panel" to "A11y Checker"
+- [x] Inline scan button in header (compact, always visible)
+- [x] Deduplicate shared `failureSummary` text in grouped violations
+- [x] "Show N more" progressive disclosure for violations with many nodes
+- [x] Copy violation to clipboard button
+
+## Phase 7 — Contrast Checker
+
+Full-page contrast audit plus a live picker to spot-check elements.
+
+**Audit mode:**
+- [ ] Walk all visible text elements, compute foreground/background contrast ratio
+- [ ] Check against WCAG AA thresholds (4.5:1 normal text, 3:1 large text)
+- [ ] List failures grouped by ratio — element, colors, actual vs required ratio
+- [ ] Integrate with existing highlight system to show failing elements on-page
+
+**Picker mode:**
+- [ ] Toggle picker — hover highlights elements, click locks selection
+- [ ] Show foreground color, background color, contrast ratio, AA/AAA pass/fail, text size classification
+- [ ] Handle computed backgrounds (opacity, stacked layers) via axe-core `color.getBackgroundColor`
+
+**UI:**
+- [ ] New "Contrast" tab in PanelNav
+
+## Phase 8 — Element Inspector
+
+Click-to-inspect any element and view its accessibility properties.
+
+**Interaction:**
+- [ ] Toggle inspector mode — hover highlights elements, click selects
+- [ ] Share picker mechanism with contrast checker where possible
+
+**Properties shown:**
+- [ ] Computed accessible name (and source — `aria-label`, `aria-labelledby`, content, `alt`, `title`)
+- [ ] Role (explicit ARIA role or implicit HTML role)
+- [ ] States & properties (`aria-expanded`, `aria-required`, `aria-checked`, etc.)
+- [ ] Focusable / in tab order
+- [ ] Missing required properties (e.g. `role="checkbox"` without `aria-checked`)
