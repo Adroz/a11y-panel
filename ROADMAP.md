@@ -38,14 +38,15 @@ Visualise keyboard navigation order.
 - [x] Focus trap detection and warnings
 - [x] Side panel nav with Scan / Tab Stops tabs
 
-## Phase 4 — Manual Checklist
+## Phase 4 — Manual Checklist ✅
 
 Guided manual accessibility assessment.
 
-- [ ] WCAG 2.1 AA checklist (Perceivable, Operable, Understandable, Robust)
-- [ ] Auto-populated results from scan data where applicable
-- [ ] Step-by-step testing instructions for manual-only items
-- [ ] Pass/fail/not-applicable status tracking
+- [x] WCAG 2.1 AA checklist — all 50 Level A + AA criteria across four POUR principles
+- [x] Auto-populated from scan results via axe-core rule → WCAG criterion mapping
+- [x] Step-by-step testing instructions for each criterion
+- [x] Pass/fail/not-applicable status tracking, persisted to chrome.storage
+- [x] Progress bar with per-principle breakdown
 
 ## Phase 5 — Export & Polish
 

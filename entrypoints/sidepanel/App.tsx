@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { PanelHeader } from "@/components/layout/PanelHeader";
-import { PanelNav } from "@/components/layout/PanelNav";
+import { PanelNav, type Tab } from "@/components/layout/PanelNav";
 import { ScanButton } from "@/components/scan/ScanButton";
 import { ScanSummary } from "@/components/scan/ScanSummary";
 import { ScanDeltaCard } from "@/components/scan/ScanDelta";
@@ -9,9 +9,8 @@ import { HighlightToggle } from "@/components/scan/HighlightToggle";
 import { ScanHistory } from "@/components/scan/ScanHistory";
 import { ViolationList } from "@/components/results/ViolationList";
 import { TabStopsToggle } from "@/components/scan/TabStopsToggle";
+import { ChecklistView } from "@/components/checklist/ChecklistView";
 import { useScanStore } from "@/hooks/use-scan";
-
-type Tab = "scan" | "tabstops";
 
 export function App() {
   const [activeTab, setActiveTab] = useState<Tab>("scan");
@@ -61,6 +60,8 @@ export function App() {
             </p>
           </>
         )}
+
+        {activeTab === "checklist" && <ChecklistView />}
       </main>
     </div>
   );
