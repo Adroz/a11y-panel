@@ -1,6 +1,8 @@
 import { useState } from "react";
 import type { WcagCriterion } from "@/lib/checklist";
 import { useChecklistStore } from "@/hooks/use-checklist";
+import { useSettingsStore } from "@/hooks/use-settings";
+import { getChecklistText, getChecklistSteps } from "@/lib/plain-language";
 import { StatusButton } from "./StatusButton";
 
 interface ChecklistItemProps {
@@ -14,6 +16,7 @@ export function ChecklistItem({ criterion }: ChecklistItemProps) {
   const setStatus = useChecklistStore((s) => s.setStatus);
 
   const isAuto = autoPopulated.has(criterion.id);
+  const plain = useSettingsStore((s) => s.plainLanguage);
 
   return (
     <div className="rounded border border-zinc-200 bg-white">
@@ -52,12 +55,12 @@ export function ChecklistItem({ criterion }: ChecklistItemProps) {
 
       {expanded && (
         <div className="border-t border-zinc-100 px-3 pb-3 pt-2">
-          <p className="mb-2 text-xs text-zinc-600">{criterion.description}</p>
+          <p className="mb-2 text-xs text-zinc-600">{getChecklistText(criterion, "description", plain)}</p>
 
           <div className="space-y-1">
             <p className="text-xs font-medium text-zinc-500">Testing steps:</p>
             <ol className="list-inside list-decimal space-y-1">
-              {criterion.testingSteps.map((step, i) => (
+              {getChecklistSteps(criterion, plain).map((step, i) => (
                 <li key={i} className="text-xs text-zinc-600">{step}</li>
               ))}
             </ol>

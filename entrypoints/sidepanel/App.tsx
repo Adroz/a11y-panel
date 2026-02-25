@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PanelHeader } from "@/components/layout/PanelHeader";
 import { PanelNav, type Tab } from "@/components/layout/PanelNav";
 import { ScanSummary } from "@/components/scan/ScanSummary";
@@ -12,6 +12,7 @@ import { TabStopList } from "@/components/tabstops/TabStopList";
 import { ChecklistView } from "@/components/checklist/ChecklistView";
 import { ExportButtons } from "@/components/scan/ExportButtons";
 import { useScanStore } from "@/hooks/use-scan";
+import { useSettingsStore } from "@/hooks/use-settings";
 import { useTabStopsStore } from "@/hooks/use-tab-stops";
 
 export function App() {
@@ -19,6 +20,11 @@ export function App() {
   const status = useScanStore((s) => s.status);
   const error = useScanStore((s) => s.error);
   const tabStopsStatus = useTabStopsStore((s) => s.status);
+  const loadSettings = useSettingsStore((s) => s.loadFromStorage);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50">

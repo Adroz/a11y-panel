@@ -1,6 +1,8 @@
 import { useState } from "react";
 import type { ScanViolation } from "@/types/scan";
 import { useScanStore } from "@/hooks/use-scan";
+import { useSettingsStore } from "@/hooks/use-settings";
+import { getViolationText, getFixText } from "@/lib/plain-language";
 import { ImpactBadge } from "./ImpactBadge";
 
 const INITIAL_VISIBLE = 3;
@@ -35,6 +37,7 @@ export function ViolationCard({ violation }: ViolationCardProps) {
   const [copied, setCopied] = useState(false);
   const highlightedSelector = useScanStore((s) => s.highlightedSelector);
   const setHighlighted = useScanStore((s) => s.setHighlighted);
+  const plain = useSettingsStore((s) => s.plainLanguage);
 
   // Deduplicate: if all nodes share the same failureSummary, show it once
   const summaries = violation.nodes.map((n) => n.failureSummary);
@@ -81,13 +84,13 @@ export function ViolationCard({ violation }: ViolationCardProps) {
               {totalNodes} element{totalNodes !== 1 && "s"}
             </span>
           </div>
-          <p className="text-sm font-medium text-zinc-900">{violation.help}</p>
+          <p className="text-sm font-medium text-zinc-900">{getViolationText(violation, "help", plain)}</p>
         </div>
       </button>
 
       {expanded && (
         <div className="border-t border-zinc-100 px-3 pb-3 pt-2">
-          <p className="mb-2 text-xs text-zinc-600">{violation.description}</p>
+          <p className="mb-2 text-xs text-zinc-600">{getViolationText(violation, "description", plain)}</p>
 
           <div className="mb-3 flex items-center gap-3">
             <a
@@ -126,7 +129,7 @@ export function ViolationCard({ violation }: ViolationCardProps) {
           </div>
 
           {sharedSummary && (
-            <p className="mb-2 text-xs text-zinc-500">{sharedSummary}</p>
+            <p className="mb-2 text-xs text-zinc-500">{getFixText(violation, sharedSummary, plain)}</p>
           )}
 
           <div className="space-y-2">
@@ -140,7 +143,7 @@ export function ViolationCard({ violation }: ViolationCardProps) {
                     {node.html}
                   </pre>
                   {!sharedSummary && node.failureSummary && (
-                    <p className="mb-2 text-xs text-zinc-500">{node.failureSummary}</p>
+                    <p className="mb-2 text-xs text-zinc-500">{getFixText(violation, node.failureSummary, plain)}</p>
                   )}
                   <button
                     onClick={() => setHighlighted(isHighlighted ? null : selector, violation.impact)}

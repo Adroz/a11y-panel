@@ -131,13 +131,15 @@ Interactive tab stop list with reorder, highlight, and export.
 - [x] Auto-select moved item after reorder
 - [x] JSON export of tab stop order with selectors, roles, and trap info
 
-## Phase 12 — Plain Language Mode
+## Phase 12 — Plain Language Mode ✅
 
 Make results accessible to non-technical users.
 
-- [ ] Technical / non-technical toggle (persisted to storage)
-- [ ] Simplified violation descriptions and fix suggestions
-- [ ] Reduce jargon in checklist testing instructions
+- [x] Technical / non-technical toggle (persisted to storage)
+- [x] Simplified violation descriptions and fix suggestions for all 98 axe-core rules
+- [x] Plain language checklist descriptions and testing steps for all 50 WCAG criteria
+- [x] Settings gear menu in header with toggle switch
+- [x] Exports and copy always use technical text regardless of mode
 
 ## Phase 13 — Quality of Life
 
