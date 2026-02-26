@@ -23,7 +23,12 @@ export default defineBackground(() => {
         case "DISABLE_CONTRAST_PICKER":
         case "HIGHLIGHT_CONTRAST_ELEMENT":
         case "CLEAR_CONTRAST_HIGHLIGHT":
+        case "ENABLE_PIXEL_PICKER":
+        case "DISABLE_PIXEL_PICKER":
           forwardToActiveTab(message, sendResponse);
+          return true; // async
+        case "CAPTURE_TAB_SCREENSHOT":
+          handleCaptureScreenshot(sendResponse);
           return true; // async
         default:
           return false;
@@ -86,6 +91,23 @@ async function forwardToActiveTab(message: Message, sendResponse: (r: ResponseMe
   } catch (err) {
     sendResponse({
       type: "SCAN_ERROR",
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+async function handleCaptureScreenshot(sendResponse: (r: ResponseMessage) => void) {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab?.windowId) {
+      sendResponse({ type: "TAB_SCREENSHOT_ERROR", error: "No active tab found" });
+      return;
+    }
+    const dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, { format: "png" });
+    sendResponse({ type: "TAB_SCREENSHOT_CAPTURED", dataUrl });
+  } catch (err) {
+    sendResponse({
+      type: "TAB_SCREENSHOT_ERROR",
       error: err instanceof Error ? err.message : String(err),
     });
   }

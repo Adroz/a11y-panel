@@ -161,3 +161,50 @@ Keyboard navigation, export improvements, and extension settings.
 - [ ] Keyboard navigation within the side panel (arrow keys, focus management)
 - [ ] AI-friendly export format (structured for pasting into LLM prompts)
 - [ ] Extension options page (when there's enough config to justify it)
+
+## Phase 14 — Color Picker & Swatch Comparison ✅
+
+Pixel-level eyedropper and swatch comparison grid for arbitrary color contrast checks.
+
+**Pixel picker:**
+- [x] Screenshot capture via `chrome.tabs.captureVisibleTab()` in background script
+- [x] Full-screen canvas overlay in content script with crosshair cursor
+- [x] Magnifier lens — 15x15 pixel grid at 8x zoom, following cursor, with center pixel highlight
+- [x] DPI-aware pixel sampling (retina/HiDPI coordinate mapping)
+- [x] Click to sample pixel color (picker stays active for multiple picks)
+- [x] Escape to dismiss, smart magnifier positioning near viewport edges
+
+**Swatch grid:**
+- [x] Collected color swatches with hex value, color preview, and role assignment
+- [x] Inline hex editing with validation (3 or 6 digit hex)
+- [x] Role dropdown: Normal text / Large text / Background / UI component
+- [x] Select/deselect, copy hex, remove individual swatches
+- [x] Select all / clear all controls
+
+**Contrast comparison:**
+- [x] Role-aware pairing — foreground swatches vs background swatches
+- [x] Threshold selection by role (normal text 4.5:1, large text 3:1, UI component 3:1)
+- [x] Fallback to all-pairs comparison at 4.5:1 when no background assigned
+- [x] AA/AAA pass/fail badges per pair
+
+**Color suggestions:**
+- [x] HSL-based binary search for minimum lightness change to meet target ratio
+- [x] Lighter and darker suggestions offered for failing pairs
+- [x] "Use this" button updates swatch and re-triggers comparison
+- [x] "Copy" button for suggested hex values
+
+**Integration:**
+- [x] Mutual exclusivity — pixel picker and element picker disable each other
+- [x] Tab-switch cleanup — pixel picker disabled when leaving Contrast tab
+- [x] Tab stops cleared when leaving Tab Stops tab
+- [x] Swatch grid and comparison persist across mode changes
+
+**UI refinements:**
+- [x] Contrast tab uses three always-on toggle buttons (Contrast checker, Element picker, Colour picker)
+- [x] Consistent blue active state across all toggle buttons
+- [x] Only the selected view's content is shown; one view always active
+- [x] Contrast checker auto-runs on first visit, re-runs on click
+- [x] Helper text for empty element picker and colour picker states
+- [x] Magnifier hidden when cursor leaves the page
+- [x] Colour suggestion layout wraps cleanly at narrow widths
+- [x] Scan button moved from header to Scan tab

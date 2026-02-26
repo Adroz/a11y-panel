@@ -35,7 +35,10 @@ export type RequestMessage =
   | { type: "ENABLE_CONTRAST_PICKER" }
   | { type: "DISABLE_CONTRAST_PICKER" }
   | { type: "HIGHLIGHT_CONTRAST_ELEMENT"; selector: string }
-  | { type: "CLEAR_CONTRAST_HIGHLIGHT" };
+  | { type: "CLEAR_CONTRAST_HIGHLIGHT" }
+  | { type: "CAPTURE_TAB_SCREENSHOT" }
+  | { type: "ENABLE_PIXEL_PICKER"; screenshotDataUrl: string }
+  | { type: "DISABLE_PIXEL_PICKER" };
 
 // Content Script → Background → Side Panel
 export type ResponseMessage =
@@ -55,6 +58,11 @@ export type ResponseMessage =
   | { type: "CONTRAST_AUDIT_ERROR"; error: string }
   | { type: "CONTRAST_PICKER_ENABLED" }
   | { type: "CONTRAST_PICKER_DISABLED" }
-  | { type: "CONTRAST_PICKER_RESULT"; result: ContrastPickerResult };
+  | { type: "CONTRAST_PICKER_RESULT"; result: ContrastPickerResult }
+  | { type: "TAB_SCREENSHOT_CAPTURED"; dataUrl: string }
+  | { type: "TAB_SCREENSHOT_ERROR"; error: string }
+  | { type: "PIXEL_PICKER_ENABLED" }
+  | { type: "PIXEL_PICKER_DISABLED" }
+  | { type: "PIXEL_PICKED"; hex: string };
 
 export type Message = RequestMessage | ResponseMessage;

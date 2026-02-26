@@ -23,3 +23,33 @@ export interface ContrastAuditResult {
   failures: ContrastResult[];
   undetermined: ContrastResult[];
 }
+
+export type SwatchRole = "normal-text" | "large-text" | "background" | "ui-component";
+
+export interface ColorSwatchEntry {
+  id: string;
+  hex: string;
+  role: SwatchRole;
+  selected: boolean;
+}
+
+export interface SwatchContrastPair {
+  fgId: string;
+  bgId: string;
+  fgHex: string;
+  bgHex: string;
+  fgRole: SwatchRole;
+  bgRole: SwatchRole;
+  contrastRatio: number;
+  requiredRatio: number;
+  aaPass: boolean;
+  aaaPass: boolean;
+}
+
+export interface ColorSuggestion {
+  originalHex: string;
+  suggestedHex: string;
+  targetRatio: number;
+  achievedRatio: number;
+  direction: "lighter" | "darker";
+}

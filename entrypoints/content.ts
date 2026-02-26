@@ -14,6 +14,7 @@ import {
   type FocusTrap,
 } from "@/lib/tabstops";
 import { runContrastAudit, enablePicker, disablePicker } from "@/lib/contrast";
+import { enablePixelPicker, disablePixelPicker } from "@/lib/contrast/pixel-picker";
 import type { Message, ResponseMessage, SerializedTabStop } from "@/types/messages";
 
 // Module-level state for tab stops so later messages can reference live elements
@@ -97,6 +98,15 @@ export default defineContentScript({
           case "CLEAR_CONTRAST_HIGHLIGHT":
             clearHighlights();
             sendResponse({ type: "HIGHLIGHTS_CLEARED" });
+            return false;
+
+          case "ENABLE_PIXEL_PICKER":
+            handleEnablePixelPicker(message.screenshotDataUrl, sendResponse);
+            return true; // async
+
+          case "DISABLE_PIXEL_PICKER":
+            disablePixelPicker();
+            sendResponse({ type: "PIXEL_PICKER_DISABLED" });
             return false;
 
           default:
@@ -263,6 +273,29 @@ function handleContrastAudit(sendResponse: (r: ResponseMessage) => void) {
   } catch (err) {
     sendResponse({
       type: "CONTRAST_AUDIT_ERROR",
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+async function handleEnablePixelPicker(
+  screenshotDataUrl: string,
+  sendResponse: (r: ResponseMessage) => void,
+) {
+  try {
+    await enablePixelPicker(
+      screenshotDataUrl,
+      (hex) => {
+        chrome.runtime.sendMessage({ type: "PIXEL_PICKED", hex }).catch(() => {});
+      },
+      () => {
+        chrome.runtime.sendMessage({ type: "PIXEL_PICKER_DISABLED" }).catch(() => {});
+      },
+    );
+    sendResponse({ type: "PIXEL_PICKER_ENABLED" });
+  } catch (err) {
+    sendResponse({
+      type: "SCAN_ERROR",
       error: err instanceof Error ? err.message : String(err),
     });
   }
