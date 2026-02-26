@@ -1,4 +1,31 @@
+# Dependencies
 node_modules/
+
+# WXT build artifacts
 .output/
 .wxt/
 dist/
+
+# Extension packages
+*.crx
+*.xpi
+*.zip
+*.pem
+web-ext-artifacts/
+
+# TypeScript
+*.tsbuildinfo
+
+# Environment
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*.swo
+.idea/
+.vscode/
