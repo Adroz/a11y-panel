@@ -6,6 +6,8 @@ export function SettingsMenu() {
   const menuRef = useRef<HTMLDivElement>(null);
   const plainLanguage = useSettingsStore((s) => s.plainLanguage);
   const setPlainLanguage = useSettingsStore((s) => s.setPlainLanguage);
+  const showInspector = useSettingsStore((s) => s.showInspector);
+  const setShowInspector = useSettingsStore((s) => s.setShowInspector);
 
   useEffect(() => {
     if (!open) return;
@@ -56,6 +58,23 @@ export function SettingsMenu() {
               <span
                 className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${
                   plainLanguage ? "translate-x-4" : "translate-x-0.5"
+                }`}
+              />
+            </button>
+          </label>
+          <label className="flex cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50">
+            <span>Element inspector</span>
+            <button
+              role="switch"
+              aria-checked={showInspector}
+              onClick={() => setShowInspector(!showInspector)}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors ${
+                showInspector ? "bg-zinc-900" : "bg-zinc-300"
+              }`}
+            >
+              <span
+                className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${
+                  showInspector ? "translate-x-4" : "translate-x-0.5"
                 }`}
               />
             </button>

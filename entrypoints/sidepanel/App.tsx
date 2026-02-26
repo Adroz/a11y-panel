@@ -17,11 +17,14 @@ import { ContrastFailureList } from "@/components/contrast/ContrastFailureList";
 import { ContrastPickerDetail } from "@/components/contrast/ContrastPickerDetail";
 import { SwatchGrid } from "@/components/contrast/SwatchGrid";
 import { SwatchComparison } from "@/components/contrast/SwatchComparison";
+import { InspectorToggle } from "@/components/inspector/InspectorToggle";
+import { InspectorDetail } from "@/components/inspector/InspectorDetail";
 import { useScanStore } from "@/hooks/use-scan";
 import { useSettingsStore } from "@/hooks/use-settings";
 import { useTabStopsStore } from "@/hooks/use-tab-stops";
 import { useContrastStore } from "@/hooks/use-contrast";
 import { useColorPickerStore } from "@/hooks/use-color-picker";
+import { useInspectorStore } from "@/hooks/use-inspector";
 
 export function App() {
   const [activeTab, setActiveTab] = useState<Tab>("scan");
@@ -33,6 +36,7 @@ export function App() {
   const tabStopsStatus = useTabStopsStore((s) => s.status);
   const tabStopsReset = useTabStopsStore((s) => s.reset);
   const loadSettings = useSettingsStore((s) => s.loadFromStorage);
+  const showInspector = useSettingsStore((s) => s.showInspector);
   const contrastMode = useContrastStore((s) => s.mode);
   const contrastAuditResult = useContrastStore((s) => s.auditResult);
   const contrastError = useContrastStore((s) => s.error);
@@ -44,6 +48,10 @@ export function App() {
   const swatches = useColorPickerStore((s) => s.swatches);
   const comparisonPairs = useColorPickerStore((s) => s.comparisonPairs);
   const pickerResult = useContrastStore((s) => s.pickerResult);
+  const inspectorMode = useInspectorStore((s) => s.mode);
+  const inspectorResult = useInspectorStore((s) => s.result);
+  const inspectorToggle = useInspectorStore((s) => s.toggle);
+  const inspectorReset = useInspectorStore((s) => s.reset);
 
   useEffect(() => {
     loadSettings();
@@ -67,11 +75,21 @@ export function App() {
       if (pixelPickerMode === "active") pixelPickerReset();
     }
 
+    // Clean up inspector when leaving Inspect tab
+    if (prevTab === "inspect" && inspectorMode === "active") {
+      inspectorReset();
+    }
+
     // Auto-run contrast checker when entering Contrast tab for the first time
     if (activeTab === "contrast" && contrastView === "checker" && !contrastAuditResult) {
       runAudit();
     }
-  }, [activeTab, tabStopsStatus, tabStopsReset, contrastMode, contrastReset, pixelPickerMode, pixelPickerReset, contrastView, contrastAuditResult, runAudit]);
+
+    // Auto-start inspector when entering Inspect tab
+    if (activeTab === "inspect" && inspectorMode === "idle") {
+      inspectorToggle();
+    }
+  }, [activeTab, tabStopsStatus, tabStopsReset, contrastMode, contrastReset, pixelPickerMode, pixelPickerReset, contrastView, contrastAuditResult, runAudit, inspectorMode, inspectorReset, inspectorToggle]);
 
   const activeError =
     (contrastView === "checker" && contrastError) ||
@@ -80,7 +98,7 @@ export function App() {
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50">
       <PanelHeader />
-      <PanelNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <PanelNav activeTab={activeTab} onTabChange={setActiveTab} hiddenTabs={showInspector ? [] : ["inspect"]} />
 
       <main className="flex-1 space-y-3 p-4">
         {activeTab === "scan" && (
@@ -185,6 +203,18 @@ export function App() {
                   </p>
                 )}
               </>
+            )}
+          </>
+        )}
+
+        {activeTab === "inspect" && (
+          <>
+            <InspectorToggle />
+            <InspectorDetail />
+            {inspectorMode === "active" && !inspectorResult && (
+              <p className="text-center text-sm text-zinc-400 pt-8">
+                Click an element on the page to inspect its accessibility properties.
+              </p>
             )}
           </>
         )}

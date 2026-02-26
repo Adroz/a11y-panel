@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { ResponseMessage } from "@/types/messages";
 import type { ContrastAuditResult, ContrastPickerResult } from "@/types/contrast";
 import { useColorPickerStore } from "./use-color-picker";
+import { useInspectorStore } from "./use-inspector";
 
 type ContrastMode = "idle" | "audit-loading" | "audit-complete" | "picker-active" | "error";
 
@@ -80,6 +81,12 @@ export const useContrastStore = create<ContrastState>((set, get) => ({
     const pixelState = useColorPickerStore.getState();
     if (pixelState.pickerMode === "active") {
       pixelState.stopPixelPicker();
+    }
+
+    // Disable inspector if active
+    const inspectorState = useInspectorStore.getState();
+    if (inspectorState.mode === "active") {
+      inspectorState.reset();
     }
 
     // Enable picker

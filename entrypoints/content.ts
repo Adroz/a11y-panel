@@ -15,6 +15,7 @@ import {
 } from "@/lib/tabstops";
 import { runContrastAudit, enablePicker, disablePicker } from "@/lib/contrast";
 import { enablePixelPicker, disablePixelPicker } from "@/lib/contrast/pixel-picker";
+import { enableInspectorPicker, disableInspectorPicker, getImplicitRole } from "@/lib/inspector";
 import type { Message, ResponseMessage, SerializedTabStop } from "@/types/messages";
 
 // Module-level state for tab stops so later messages can reference live elements
@@ -109,6 +110,16 @@ export default defineContentScript({
             sendResponse({ type: "PIXEL_PICKER_DISABLED" });
             return false;
 
+          case "ENABLE_INSPECTOR":
+            handleEnableInspector();
+            sendResponse({ type: "INSPECTOR_ENABLED" });
+            return false;
+
+          case "DISABLE_INSPECTOR":
+            disableInspectorPicker();
+            sendResponse({ type: "INSPECTOR_DISABLED" });
+            return false;
+
           default:
             return false;
         }
@@ -134,33 +145,6 @@ async function handleScan(sendResponse: (r: ResponseMessage) => void) {
       type: "SCAN_ERROR",
       error: err instanceof Error ? err.message : String(err),
     });
-  }
-}
-
-function getImplicitRole(element: Element): string {
-  const tag = element.tagName.toLowerCase();
-  const type = element.getAttribute("type")?.toLowerCase();
-
-  switch (tag) {
-    case "a": return element.hasAttribute("href") ? "link" : "";
-    case "button": return "button";
-    case "input":
-      if (!type || type === "text") return "textbox";
-      if (type === "checkbox") return "checkbox";
-      if (type === "radio") return "radio";
-      if (type === "submit" || type === "reset" || type === "button") return "button";
-      if (type === "search") return "searchbox";
-      if (type === "range") return "slider";
-      if (type === "number") return "spinbutton";
-      return type;
-    case "select": return "combobox";
-    case "textarea": return "textbox";
-    case "img": return "img";
-    case "nav": return "navigation";
-    case "main": return "main";
-    case "header": return "banner";
-    case "footer": return "contentinfo";
-    default: return "";
   }
 }
 
@@ -310,6 +294,17 @@ function handleEnableContrastPicker() {
     () => {
       // Notify side panel when picker is dismissed via Escape key
       chrome.runtime.sendMessage({ type: "CONTRAST_PICKER_DISABLED" }).catch(() => {});
+    },
+  );
+}
+
+function handleEnableInspector() {
+  enableInspectorPicker(
+    (result) => {
+      chrome.runtime.sendMessage({ type: "INSPECTOR_RESULT", result }).catch(() => {});
+    },
+    () => {
+      chrome.runtime.sendMessage({ type: "INSPECTOR_DISABLED" }).catch(() => {});
     },
   );
 }

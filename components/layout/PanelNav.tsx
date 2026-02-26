@@ -1,21 +1,27 @@
-export type Tab = "scan" | "tabstops" | "contrast" | "checklist";
+export type Tab = "scan" | "tabstops" | "contrast" | "inspect" | "checklist";
 
 const TABS: { value: Tab; label: string }[] = [
   { value: "scan", label: "Scan" },
   { value: "tabstops", label: "Tab Stops" },
   { value: "contrast", label: "Contrast" },
+  { value: "inspect", label: "Inspect" },
   { value: "checklist", label: "Checklist" },
 ];
 
 interface PanelNavProps {
   activeTab: Tab;
   onTabChange: (tab: Tab) => void;
+  hiddenTabs?: Tab[];
 }
 
-export function PanelNav({ activeTab, onTabChange }: PanelNavProps) {
+export function PanelNav({ activeTab, onTabChange, hiddenTabs = [] }: PanelNavProps) {
+  const visibleTabs = hiddenTabs.length > 0
+    ? TABS.filter(({ value }) => !hiddenTabs.includes(value))
+    : TABS;
+
   return (
     <nav className="flex border-b border-zinc-200 bg-white px-4">
-      {TABS.map(({ value, label }) => (
+      {visibleTabs.map(({ value, label }) => (
         <button
           key={value}
           onClick={() => onTabChange(value)}

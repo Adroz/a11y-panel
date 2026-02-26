@@ -7,6 +7,7 @@ import type {
   ColorSuggestion,
 } from "@/types/contrast";
 import { useContrastStore } from "./use-contrast";
+import { useInspectorStore } from "./use-inspector";
 import { hexToRgba, isValidHex, normalizeHex } from "@/lib/contrast/hex";
 import { contrastRatio } from "@/lib/contrast/wcag";
 
@@ -118,6 +119,12 @@ export const useColorPickerStore = create<ColorPickerState>((set, get) => ({
     const contrastState = useContrastStore.getState();
     if (contrastState.mode === "picker-active") {
       contrastState.togglePicker();
+    }
+
+    // Disable inspector if active
+    const inspectorState = useInspectorStore.getState();
+    if (inspectorState.mode === "active") {
+      inspectorState.reset();
     }
 
     set({ pickerMode: "capturing", pickerError: null });

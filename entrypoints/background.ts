@@ -25,6 +25,8 @@ export default defineBackground(() => {
         case "CLEAR_CONTRAST_HIGHLIGHT":
         case "ENABLE_PIXEL_PICKER":
         case "DISABLE_PIXEL_PICKER":
+        case "ENABLE_INSPECTOR":
+        case "DISABLE_INSPECTOR":
           forwardToActiveTab(message, sendResponse);
           return true; // async
         case "CAPTURE_TAB_SCREENSHOT":

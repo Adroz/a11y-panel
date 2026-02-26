@@ -1,5 +1,6 @@
 import type { Impact, ScanViolation } from "./scan";
 import type { ContrastAuditResult, ContrastPickerResult } from "./contrast";
+import type { InspectorResult } from "./inspector";
 
 export interface HighlightTarget {
   selector: string;
@@ -38,7 +39,9 @@ export type RequestMessage =
   | { type: "CLEAR_CONTRAST_HIGHLIGHT" }
   | { type: "CAPTURE_TAB_SCREENSHOT" }
   | { type: "ENABLE_PIXEL_PICKER"; screenshotDataUrl: string }
-  | { type: "DISABLE_PIXEL_PICKER" };
+  | { type: "DISABLE_PIXEL_PICKER" }
+  | { type: "ENABLE_INSPECTOR" }
+  | { type: "DISABLE_INSPECTOR" };
 
 // Content Script → Background → Side Panel
 export type ResponseMessage =
@@ -63,6 +66,9 @@ export type ResponseMessage =
   | { type: "TAB_SCREENSHOT_ERROR"; error: string }
   | { type: "PIXEL_PICKER_ENABLED" }
   | { type: "PIXEL_PICKER_DISABLED" }
-  | { type: "PIXEL_PICKED"; hex: string };
+  | { type: "PIXEL_PICKED"; hex: string }
+  | { type: "INSPECTOR_ENABLED" }
+  | { type: "INSPECTOR_DISABLED" }
+  | { type: "INSPECTOR_RESULT"; result: InspectorResult };
 
 export type Message = RequestMessage | ResponseMessage;

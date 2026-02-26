@@ -100,20 +100,23 @@ Full-page contrast audit plus a live picker to spot-check elements.
 - [x] Error handling on restricted pages (chrome://, extensions page)
 - [x] Fixed tab stop active circle contrast (darkened from #e65100 to #bf360c)
 
-## Phase 8 — Element Inspector
+## Phase 8 — Element Inspector ✅
 
-Click-to-inspect any element and view its accessibility properties.
+Click-to-inspect any element and view its accessibility properties. Hidden behind a settings toggle ("Element inspector") while being evaluated for usefulness.
 
 **Interaction:**
-- [ ] Toggle inspector mode — hover highlights elements, click selects
-- [ ] Share picker mechanism with contrast checker where possible
+- [x] Toggle inspector mode — hover highlights elements with violet overlay, click selects
+- [x] Separate picker from contrast checker (violet tint vs blue), auto-starts on tab entry
+- [x] Mutual exclusivity with contrast element picker and pixel picker
+- [x] Hidden by default — enable via gear menu "Element inspector" toggle (persisted to storage)
 
 **Properties shown:**
-- [ ] Computed accessible name (and source — `aria-label`, `aria-labelledby`, content, `alt`, `title`)
-- [ ] Role (explicit ARIA role or implicit HTML role)
-- [ ] States & properties (`aria-expanded`, `aria-required`, `aria-checked`, etc.)
-- [ ] Focusable / in tab order
-- [ ] Missing required properties (e.g. `role="checkbox"` without `aria-checked`)
+- [x] Computed accessible name (and source — `aria-label`, `aria-labelledby`, content, `alt`, `title`, `placeholder`, `label`)
+- [x] Role (explicit ARIA role or implicit HTML role)
+- [x] States & properties (`aria-expanded`, `aria-required`, `aria-checked`, etc.)
+- [x] Focusable / in tab order / tabindex value
+- [x] Missing required properties for explicit roles (e.g. `role="checkbox"` without `aria-checked`)
+- [x] Highlight inspected element on page
 
 ## Phase 9 — Checklist Improvements
 
