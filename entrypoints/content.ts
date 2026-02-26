@@ -13,6 +13,7 @@ import {
   type TabStop,
   type FocusTrap,
 } from "@/lib/tabstops";
+import { runContrastAudit, enablePicker, disablePicker } from "@/lib/contrast";
 import type { Message, ResponseMessage, SerializedTabStop } from "@/types/messages";
 
 // Module-level state for tab stops so later messages can reference live elements
@@ -72,6 +73,30 @@ export default defineContentScript({
 
           case "REORDER_TAB_STOPS":
             handleReorderTabStops(message.order, sendResponse);
+            return false;
+
+          case "RUN_CONTRAST_AUDIT":
+            handleContrastAudit(sendResponse);
+            return false;
+
+          case "ENABLE_CONTRAST_PICKER":
+            handleEnableContrastPicker();
+            sendResponse({ type: "CONTRAST_PICKER_ENABLED" });
+            return false;
+
+          case "DISABLE_CONTRAST_PICKER":
+            disablePicker();
+            sendResponse({ type: "CONTRAST_PICKER_DISABLED" });
+            return false;
+
+          case "HIGHLIGHT_CONTRAST_ELEMENT":
+            highlightElement(message.selector, "serious");
+            sendResponse({ type: "HIGHLIGHT_APPLIED", selector: message.selector });
+            return false;
+
+          case "CLEAR_CONTRAST_HIGHLIGHT":
+            clearHighlights();
+            sendResponse({ type: "HIGHLIGHTS_CLEARED" });
             return false;
 
           default:
@@ -229,4 +254,29 @@ function handleReorderTabStops(order: string[], sendResponse: (r: ResponseMessag
   showTabStopOverlay(reordered, storedTraps);
 
   sendResponse({ type: "TAB_STOPS_REORDERED" });
+}
+
+function handleContrastAudit(sendResponse: (r: ResponseMessage) => void) {
+  try {
+    const result = runContrastAudit();
+    sendResponse({ type: "CONTRAST_AUDIT_COMPLETE", result });
+  } catch (err) {
+    sendResponse({
+      type: "CONTRAST_AUDIT_ERROR",
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+function handleEnableContrastPicker() {
+  enablePicker(
+    (result) => {
+      // Send unsolicited message to side panel via runtime
+      chrome.runtime.sendMessage({ type: "CONTRAST_PICKER_RESULT", result }).catch(() => {});
+    },
+    () => {
+      // Notify side panel when picker is dismissed via Escape key
+      chrome.runtime.sendMessage({ type: "CONTRAST_PICKER_DISABLED" }).catch(() => {});
+    },
+  );
 }

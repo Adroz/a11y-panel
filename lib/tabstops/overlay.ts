@@ -12,7 +12,7 @@ const LINE_DASH = '6 4';
 const LINE_WIDTH = 2;
 const TRAP_BORDER_COLOR = 'rgba(211, 47, 47, 0.6)';
 const TRAP_LABEL_BG = 'rgba(211, 47, 47, 0.85)';
-const ACTIVE_CIRCLE_COLOR = '#e65100';
+const ACTIVE_CIRCLE_COLOR = '#bf360c';
 const HIGHLIGHT_RING_COLOR = '#1565c0';
 const HIGHLIGHT_RING_ID = 'a11y-panel-highlight-ring';
 
@@ -84,7 +84,7 @@ function injectStyles(): void {
     .a11y-tabstop-circle-active {
       background: ${ACTIVE_CIRCLE_COLOR} !important;
       transform: scale(1.35);
-      box-shadow: 0 0 0 3px rgba(230, 81, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+      box-shadow: 0 0 0 3px rgba(191, 54, 12, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
       transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
     }
 

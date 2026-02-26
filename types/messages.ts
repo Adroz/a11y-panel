@@ -1,4 +1,5 @@
 import type { Impact, ScanViolation } from "./scan";
+import type { ContrastAuditResult, ContrastPickerResult } from "./contrast";
 
 export interface HighlightTarget {
   selector: string;
@@ -29,7 +30,12 @@ export type RequestMessage =
   | { type: "DISABLE_TAB_STOPS" }
   | { type: "HIGHLIGHT_TAB_STOP"; selector: string }
   | { type: "CLEAR_TAB_STOP_HIGHLIGHT" }
-  | { type: "REORDER_TAB_STOPS"; order: string[] };
+  | { type: "REORDER_TAB_STOPS"; order: string[] }
+  | { type: "RUN_CONTRAST_AUDIT" }
+  | { type: "ENABLE_CONTRAST_PICKER" }
+  | { type: "DISABLE_CONTRAST_PICKER" }
+  | { type: "HIGHLIGHT_CONTRAST_ELEMENT"; selector: string }
+  | { type: "CLEAR_CONTRAST_HIGHLIGHT" };
 
 // Content Script → Background → Side Panel
 export type ResponseMessage =
@@ -44,6 +50,11 @@ export type ResponseMessage =
   | { type: "TAB_STOPS_ERROR"; error: string }
   | { type: "TAB_STOP_HIGHLIGHTED" }
   | { type: "TAB_STOP_HIGHLIGHT_CLEARED" }
-  | { type: "TAB_STOPS_REORDERED" };
+  | { type: "TAB_STOPS_REORDERED" }
+  | { type: "CONTRAST_AUDIT_COMPLETE"; result: ContrastAuditResult }
+  | { type: "CONTRAST_AUDIT_ERROR"; error: string }
+  | { type: "CONTRAST_PICKER_ENABLED" }
+  | { type: "CONTRAST_PICKER_DISABLED" }
+  | { type: "CONTRAST_PICKER_RESULT"; result: ContrastPickerResult };
 
 export type Message = RequestMessage | ResponseMessage;

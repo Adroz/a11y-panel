@@ -1,8 +1,9 @@
-export type Tab = "scan" | "tabstops" | "checklist";
+export type Tab = "scan" | "tabstops" | "contrast" | "checklist";
 
 const TABS: { value: Tab; label: string }[] = [
   { value: "scan", label: "Scan" },
   { value: "tabstops", label: "Tab Stops" },
+  { value: "contrast", label: "Contrast" },
   { value: "checklist", label: "Checklist" },
 ];
 

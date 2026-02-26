@@ -69,23 +69,36 @@ Rebrand to A11y Checker and refine violation card UX.
 - [x] "Show N more" progressive disclosure for violations with many nodes
 - [x] Copy violation to clipboard button
 
-## Phase 7 — Contrast Checker
+## Phase 7 — Contrast Checker ✅
 
 Full-page contrast audit plus a live picker to spot-check elements.
 
 **Audit mode:**
-- [ ] Walk all visible text elements, compute foreground/background contrast ratio
-- [ ] Check against WCAG AA thresholds (4.5:1 normal text, 3:1 large text)
-- [ ] List failures grouped by ratio — element, colors, actual vs required ratio
-- [ ] Integrate with existing highlight system to show failing elements on-page
+- [x] TreeWalker-based DOM walk of all visible text elements
+- [x] WCAG contrast math — sRGB linearization, relative luminance, contrast ratio
+- [x] Background color resolution — ancestor walk with alpha compositing over white canvas
+- [x] Large text detection (>= 24px or >= 18.67px bold) with 3:1 AA threshold
+- [x] Failures sorted worst-first, undetermined (background-image) in separate section
+- [x] Highlight failing elements on-page via existing highlight system
 
 **Picker mode:**
-- [ ] Toggle picker — hover highlights elements, click locks selection
-- [ ] Show foreground color, background color, contrast ratio, AA/AAA pass/fail, text size classification
-- [ ] Handle computed backgrounds (opacity, stacked layers) via axe-core `color.getBackgroundColor`
+- [x] Toggle picker — hover highlights elements with blue overlay + floating tooltip
+- [x] Click to lock selection, Escape to unlock or dismiss picker
+- [x] Show foreground/background color swatches, hex values, contrast ratio, AA/AAA badges
+- [x] Works on any element (text, images, links) — not limited to text nodes
+- [x] Picker dismissal via Escape syncs state back to side panel
 
 **UI:**
-- [ ] New "Contrast" tab in PanelNav
+- [x] New "Contrast" tab in PanelNav (between Tab Stops and Checklist)
+- [x] Audit summary card (green for clean, orange for failures)
+- [x] Failure list with color swatches, ratio, AA/AAA badges, highlight button
+- [x] Picker detail card with tag name, accessible name, full contrast info
+- [x] Tab-switch cleanup (picker auto-disabled when navigating away)
+
+**Robustness:**
+- [x] Extension-injected elements excluded from audit and picker
+- [x] Error handling on restricted pages (chrome://, extensions page)
+- [x] Fixed tab stop active circle contrast (darkened from #e65100 to #bf360c)
 
 ## Phase 8 — Element Inspector
 

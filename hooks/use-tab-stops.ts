@@ -68,6 +68,7 @@ export const useTabStopsStore = create<TabStopsState>((set, get) => ({
           });
           break;
         case "TAB_STOPS_ERROR":
+        case "SCAN_ERROR":
           set({ status: "error", error: response.error });
           break;
       }

@@ -18,6 +18,11 @@ export default defineBackground(() => {
         case "HIGHLIGHT_TAB_STOP":
         case "CLEAR_TAB_STOP_HIGHLIGHT":
         case "REORDER_TAB_STOPS":
+        case "RUN_CONTRAST_AUDIT":
+        case "ENABLE_CONTRAST_PICKER":
+        case "DISABLE_CONTRAST_PICKER":
+        case "HIGHLIGHT_CONTRAST_ELEMENT":
+        case "CLEAR_CONTRAST_HIGHLIGHT":
           forwardToActiveTab(message, sendResponse);
           return true; // async
         default:
