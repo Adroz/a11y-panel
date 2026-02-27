@@ -1,0 +1,23 @@
+import { vi } from "vitest";
+
+// Mock chrome APIs used by stores
+const chromeMock = {
+  storage: {
+    local: {
+      get: vi.fn().mockResolvedValue({}),
+      set: vi.fn().mockResolvedValue(undefined),
+    },
+  },
+  runtime: {
+    sendMessage: vi.fn((_msg: unknown, cb?: (response: unknown) => void) => {
+      if (cb) cb({ type: "OK" });
+    }),
+    onMessage: {
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+    },
+    lastError: null,
+  },
+};
+
+vi.stubGlobal("chrome", chromeMock);

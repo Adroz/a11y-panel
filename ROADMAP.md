@@ -231,33 +231,64 @@ Inline accordion checklist: expanding a category shows a stepper within the list
 - [x] Criterion highlight map built from scan violations via AXE_TO_WCAG + tag parsing
 - [x] Progress bar + scan button + reset always visible regardless of expanded state
 
-## Phase 12c — Automated Verification
+## Phase 12c — Automated Verification ✅
 
-Automate manual verification steps for the checklist to reduce testing overhead.
+Vitest test suite for checklist data model and store logic.
 
-- [ ] Automated build verification (`pnpm build` in CI)
-- [ ] Category count assertion (14 categories, 50 total criteria)
-- [ ] Checklist store unit tests (navigation state, auto-advance, toggle behaviour)
-- [ ] Progress calculation unit tests (per-category and overall)
-- [ ] Auto-populate integration test (scan → auto-populate → correct statuses)
-- [ ] Highlight map unit test (violations → criterion ID mapping)
+- [x] Vitest setup with chrome API mocks and `@/` path aliases
+- [x] Category count assertion (14 categories, 50 total criteria, unique keys, valid IDs)
+- [x] Checklist store unit tests (navigation state, toggle, auto-advance, status management)
+- [x] Progress calculation unit tests (per-category and overall, mixed statuses)
+- [x] Auto-populate integration test (scan → auto-populate → correct statuses, no overwrite)
+- [x] AXE_TO_WCAG mapping integrity test (all mapped IDs are valid criteria)
+- [x] Highlight map unit tests (violations → criterion ID mapping, multi-node, multi-criterion)
+- [x] `pnpm test` script (50 tests across 5 test files)
 
-## Phase 13 — Checklist Improvements
+## Phase 13 — Tab Stop Improvements
+
+Enhance tab stops with persistent state, auto-show, and checklist integration.
+
+- [ ] Auto-show tab stops when entering Tab Stops tab (re-hide on leave)
+- [ ] Persist reordered tab stop order across tab switches (don't re-walk DOM)
+- [ ] Remember toggle preference (on/off) in chrome.storage
+- [ ] Export with original + reordered position columns
+- [ ] Focus category in checklist shows captured tab stop order inline
+
+## Phase 14 — Contrast Fix Suggestions
+
+Live-preview contrast fixes on the page and track applied changes.
+
+- [ ] "Suggest fix" button on contrast audit failure rows
+- [ ] Live preview — apply suggested color to page element via inline style override
+- [ ] Track applied fixes in store (selector, property, original hex, new hex)
+- [ ] Include applied fixes in HTML/JSON export ("Suggested fixes" section)
+- [ ] Clear overrides on tab switch / reset (same as highlight cleanup)
+
+## Phase 15 — Text-in-Image Detection
+
+Flag images that likely contain text for WCAG 1.4.5 (Images of Text) review.
+
+- [ ] Tier 1: metadata heuristics (SVG `<text>` elements, alt text keywords, filename patterns)
+- [ ] Tier 2: canvas edge-density analysis (Sobel edge detection, horizontal band detection)
+- [ ] Tier 3: progressive enhancement via TextDetector API when available
+- [ ] Flag images as "likely contains text" in scan results for manual review
+- [ ] Integration with checklist Images category
+
+## Phase 16 — Checklist Improvements
 
 Refine the checklist workflow beyond the restructure.
 
 - [ ] Per-page checklist state (track progress per URL)
 - [ ] Better auto-populate accuracy and feedback
-- [ ] Checklist export integration (include in HTML/JSON reports)
 
-## Phase 14 — Issue Navigator & Auto-Rescan
+## Phase 17 — Issue Navigator & Auto-Rescan
 
 Streamline the scan workflow with guided issue navigation and automatic re-scanning.
 
 - [ ] Step-by-step issue stepper — walk through violations one at a time, scrolling to each on the page
 - [ ] Re-scan on page navigation — detect URL changes, prompt or auto-rescan
 
-## Phase 15 — Quality of Life
+## Phase 18 — Quality of Life
 
 Keyboard navigation, export improvements, and extension settings.
 
