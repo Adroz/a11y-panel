@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { WCAG_CRITERIA, type WcagPrinciple } from "@/lib/checklist";
+import { WCAG_CRITERIA, ASSESSMENT_CATEGORIES, type WcagPrinciple } from "@/lib/checklist";
 import { getAutoPopulatedResults } from "@/lib/checklist";
 import type { ScanViolation } from "@/types/scan";
 
@@ -11,10 +11,21 @@ interface ChecklistState {
   /** criterion IDs that were auto-populated from scan results */
   autoPopulated: Set<string>;
 
+  /** Transient navigation state (not persisted) */
+  activeCategoryKey: string | null;
+  activeCriterionIndex: number;
+
   setStatus: (criterionId: string, status: CheckStatus) => void;
+  advanceOnStatus: (criterionId: string, status: CheckStatus) => void;
   autoPopulateFromScan: (violations: ScanViolation[]) => void;
   resetAll: () => void;
   loadFromStorage: () => void;
+
+  enterCategory: (key: string) => void;
+  exitCategory: () => void;
+  nextCriterion: () => void;
+  prevCriterion: () => void;
+  goToCriterion: (index: number) => void;
 }
 
 const STORAGE_KEY = "checklistStatuses";
@@ -22,11 +33,20 @@ const STORAGE_KEY = "checklistStatuses";
 export const useChecklistStore = create<ChecklistState>((set, get) => ({
   statuses: Object.fromEntries(WCAG_CRITERIA.map((c) => [c.id, "untested" as CheckStatus])),
   autoPopulated: new Set(),
+  activeCategoryKey: null,
+  activeCriterionIndex: 0,
 
   setStatus: (criterionId, status) => {
     const next = { ...get().statuses, [criterionId]: status };
     set({ statuses: next });
     chrome.storage.local.set({ [STORAGE_KEY]: next });
+  },
+
+  advanceOnStatus: (criterionId, status) => {
+    get().setStatus(criterionId, status);
+    if (status !== "untested") {
+      get().nextCriterion();
+    }
   },
 
   autoPopulateFromScan: (violations) => {
@@ -51,7 +71,7 @@ export const useChecklistStore = create<ChecklistState>((set, get) => ({
     const fresh = Object.fromEntries(
       WCAG_CRITERIA.map((c) => [c.id, "untested" as CheckStatus]),
     );
-    set({ statuses: fresh, autoPopulated: new Set() });
+    set({ statuses: fresh, autoPopulated: new Set(), activeCategoryKey: null, activeCriterionIndex: 0 });
     chrome.storage.local.set({ [STORAGE_KEY]: fresh });
   },
 
@@ -62,6 +82,50 @@ export const useChecklistStore = create<ChecklistState>((set, get) => ({
         set({ statuses: saved });
       }
     });
+  },
+
+  enterCategory: (key) => {
+    if (get().activeCategoryKey === key) {
+      set({ activeCategoryKey: null, activeCriterionIndex: 0 });
+    } else {
+      set({ activeCategoryKey: key, activeCriterionIndex: 0 });
+    }
+  },
+
+  exitCategory: () => {
+    set({ activeCategoryKey: null, activeCriterionIndex: 0 });
+  },
+
+  nextCriterion: () => {
+    const { activeCategoryKey, activeCriterionIndex } = get();
+    if (!activeCategoryKey) return;
+
+    const category = ASSESSMENT_CATEGORIES.find((c) => c.key === activeCategoryKey);
+    if (!category) return;
+
+    if (activeCriterionIndex >= category.criteriaIds.length - 1) {
+      // Past last criterion — auto-open next category, or collapse if last
+      const currentIndex = ASSESSMENT_CATEGORIES.findIndex((c) => c.key === activeCategoryKey);
+      if (currentIndex < ASSESSMENT_CATEGORIES.length - 1) {
+        const nextCategory = ASSESSMENT_CATEGORIES[currentIndex + 1];
+        set({ activeCategoryKey: nextCategory.key, activeCriterionIndex: 0 });
+      } else {
+        get().exitCategory();
+      }
+    } else {
+      set({ activeCriterionIndex: activeCriterionIndex + 1 });
+    }
+  },
+
+  prevCriterion: () => {
+    const { activeCriterionIndex } = get();
+    if (activeCriterionIndex > 0) {
+      set({ activeCriterionIndex: activeCriterionIndex - 1 });
+    }
+  },
+
+  goToCriterion: (index) => {
+    set({ activeCriterionIndex: index });
   },
 }));
 
@@ -98,4 +162,20 @@ export function usePrincipleProgress(principle: WcagPrinciple) {
   }
 
   return { total: criteria.length, pass, fail, na, untested };
+}
+
+export function useCategoryProgress(criteriaIds: string[]) {
+  const statuses = useChecklistStore((s) => s.statuses);
+  let pass = 0, fail = 0, na = 0, untested = 0;
+
+  for (const id of criteriaIds) {
+    switch (statuses[id]) {
+      case "pass": pass++; break;
+      case "fail": fail++; break;
+      case "not-applicable": na++; break;
+      default: untested++; break;
+    }
+  }
+
+  return { total: criteriaIds.length, pass, fail, na, untested };
 }

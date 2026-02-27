@@ -1,4 +1,6 @@
 import type { Impact, ScanViolation } from "@/types/scan";
+import type { SerializedTabStop, FocusTrapInfo } from "@/types/messages";
+import type { ContrastAuditResult } from "@/types/contrast";
 
 // Defined locally to avoid circular imports with hooks
 type CheckStatus = "untested" | "pass" | "fail" | "not-applicable";
@@ -8,6 +10,12 @@ export interface ExportData {
   timestamp: number;
   violations: ScanViolation[];
   checklistStatuses: Record<string, CheckStatus>;
+  tabStops?: {
+    stops: SerializedTabStop[];
+    order: string[];
+    traps: FocusTrapInfo[];
+  };
+  contrastAudit?: ContrastAuditResult;
 }
 
 // ---------------------------------------------------------------------------
@@ -84,11 +92,138 @@ export function exportJSON(data: ExportData): void {
 }
 
 // ---------------------------------------------------------------------------
+// Contrast HTML Section
+// ---------------------------------------------------------------------------
+
+function buildContrastSection(audit: ContrastAuditResult | undefined): string {
+  if (!audit) return "";
+
+  const { total, failures, undetermined } = audit;
+  const passCount = total - failures.length - undetermined.length;
+
+  const summaryColor = failures.length > 0 ? "#ea580c" : "#16a34a";
+  const summaryText = failures.length > 0
+    ? `${failures.length} failure${failures.length !== 1 ? "s" : ""} found`
+    : "All elements pass";
+
+  const failureRows = failures
+    .map((f) => {
+      const ratio = f.contrastRatio.toFixed(2);
+      const required = f.requiredRatio.toFixed(1);
+      return `
+          <tr>
+            <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="display:inline-block;width:16px;height:16px;border-radius:3px;border:1px solid #d4d4d8;background:${escapeHtml(f.fgColor)};"></span>
+                <code style="font-size:12px;color:#374151;">${escapeHtml(f.fgColor)}</code>
+              </div>
+            </td>
+            <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="display:inline-block;width:16px;height:16px;border-radius:3px;border:1px solid #d4d4d8;background:${escapeHtml(f.bgColor)};"></span>
+                <code style="font-size:12px;color:#374151;">${escapeHtml(f.bgColor)}</code>
+              </div>
+            </td>
+            <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;font-weight:600;color:#dc2626;">${ratio}:1</td>
+            <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#6b7280;">${required}:1</td>
+            <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#6b7280;">${f.isLargeText ? "Large" : "Normal"}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#6b7280;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(f.textSnippet)}</td>
+          </tr>`;
+    })
+    .join("");
+
+  const failureTable = failures.length > 0
+    ? `<table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;margin-top:12px;">
+          <thead>
+            <tr style="background:#f9fafb;">
+              <th style="text-align:left;padding:10px 12px;font-size:13px;font-weight:600;color:#374151;border-bottom:2px solid #e5e7eb;">Foreground</th>
+              <th style="text-align:left;padding:10px 12px;font-size:13px;font-weight:600;color:#374151;border-bottom:2px solid #e5e7eb;">Background</th>
+              <th style="text-align:left;padding:10px 12px;font-size:13px;font-weight:600;color:#374151;border-bottom:2px solid #e5e7eb;">Ratio</th>
+              <th style="text-align:left;padding:10px 12px;font-size:13px;font-weight:600;color:#374151;border-bottom:2px solid #e5e7eb;">Required</th>
+              <th style="text-align:left;padding:10px 12px;font-size:13px;font-weight:600;color:#374151;border-bottom:2px solid #e5e7eb;">Size</th>
+              <th style="text-align:left;padding:10px 12px;font-size:13px;font-weight:600;color:#374151;border-bottom:2px solid #e5e7eb;">Text</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${failureRows}
+          </tbody>
+        </table>`
+    : "";
+
+  return `
+      <div style="margin-top:40px;">
+        <h2 style="font-size:20px;font-weight:700;color:#111827;margin:0 0 16px;padding-bottom:8px;border-bottom:2px solid #e5e7eb;">Contrast Audit</h2>
+        <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:8px;">
+          <div style="font-size:14px;color:#374151;"><strong>${total}</strong> elements checked</div>
+          <div style="font-size:14px;color:#16a34a;"><strong>${passCount}</strong> pass</div>
+          <div style="font-size:14px;color:${summaryColor};"><strong>${failures.length}</strong> fail</div>
+          ${undetermined.length > 0 ? `<div style="font-size:14px;color:#6b7280;"><strong>${undetermined.length}</strong> undetermined</div>` : ""}
+        </div>
+        <p style="font-size:14px;font-weight:600;color:${summaryColor};margin:0 0 4px;">${summaryText}</p>
+        ${failureTable}
+      </div>`;
+}
+
+// ---------------------------------------------------------------------------
+// Tab Stops HTML Section
+// ---------------------------------------------------------------------------
+
+function buildTabStopsSection(tabStops: ExportData["tabStops"]): string {
+  if (!tabStops || tabStops.stops.length === 0) return "";
+
+  const { stops, order, traps } = tabStops;
+  const trapSelectors = new Set(traps.flatMap((t) => {
+    return stops
+      .filter((_, i) => t.tabStopIndices.includes(i))
+      .map((s) => s.selector);
+  }));
+
+  const rows = order
+    .map((selector, i) => {
+      const stop = stops.find((s) => s.selector === selector);
+      if (!stop) return "";
+      const isTrap = trapSelectors.has(selector);
+      const trapBadge = isTrap
+        ? ' <span style="display:inline-block;padding:1px 6px;border-radius:9999px;font-size:10px;font-weight:600;background:#dc2626;color:#fff;">TRAP</span>'
+        : "";
+      return `
+          <tr${isTrap ? ' style="background:#fef2f2;"' : ""}>
+            <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:14px;font-weight:600;color:#1f2937;text-align:center;">${i + 1}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">${escapeHtml(stop.tagName)}${trapBadge}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">${escapeHtml(stop.role)}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">${escapeHtml(stop.accessibleName || "—")}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:12px;color:#6b7280;">${escapeHtml(stop.selector)}</td>
+          </tr>`;
+    })
+    .join("");
+
+  return `
+      <div style="margin-top:40px;">
+        <h2 style="font-size:20px;font-weight:700;color:#111827;margin:0 0 16px;padding-bottom:8px;border-bottom:2px solid #e5e7eb;">Tab Stops (${order.length})</h2>
+        ${traps.length > 0 ? `<p style="font-size:14px;color:#dc2626;margin:0 0 12px;"><strong>${traps.length} focus trap${traps.length !== 1 ? "s" : ""}</strong> detected</p>` : ""}
+        <table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;">
+          <thead>
+            <tr style="background:#f9fafb;">
+              <th style="text-align:center;padding:10px 12px;font-size:13px;font-weight:600;color:#374151;border-bottom:2px solid #e5e7eb;width:48px;">#</th>
+              <th style="text-align:left;padding:10px 12px;font-size:13px;font-weight:600;color:#374151;border-bottom:2px solid #e5e7eb;">Element</th>
+              <th style="text-align:left;padding:10px 12px;font-size:13px;font-weight:600;color:#374151;border-bottom:2px solid #e5e7eb;">Role</th>
+              <th style="text-align:left;padding:10px 12px;font-size:13px;font-weight:600;color:#374151;border-bottom:2px solid #e5e7eb;">Name</th>
+              <th style="text-align:left;padding:10px 12px;font-size:13px;font-weight:600;color:#374151;border-bottom:2px solid #e5e7eb;">Selector</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      </div>`;
+}
+
+// ---------------------------------------------------------------------------
 // HTML Export
 // ---------------------------------------------------------------------------
 
 export function exportHTML(data: ExportData): void {
-  const { url, timestamp, violations, checklistStatuses } = data;
+  const { url, timestamp, violations, checklistStatuses, tabStops, contrastAudit } = data;
 
   // Summary counts — count nodes (issues), not rules, to match UI
   const ruleCount = violations.length;
@@ -237,6 +372,12 @@ export function exportHTML(data: ExportData): void {
 
     <!-- Checklist -->
     ${checklistSection}
+
+    <!-- Contrast Audit -->
+    ${buildContrastSection(contrastAudit)}
+
+    <!-- Tab Stops -->
+    ${buildTabStopsSection(tabStops)}
 
     <!-- Footer -->
     <div style="margin-top:40px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:12px;color:#9ca3af;text-align:center;">

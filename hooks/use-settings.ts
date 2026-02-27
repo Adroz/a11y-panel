@@ -18,7 +18,7 @@ function persistSettings(patch: Partial<{ plainLanguage: boolean; showInspector:
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
-  plainLanguage: false,
+  plainLanguage: true,
   showInspector: false,
 
   setPlainLanguage: (enabled) => {

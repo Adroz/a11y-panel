@@ -100,40 +100,7 @@ Full-page contrast audit plus a live picker to spot-check elements.
 - [x] Error handling on restricted pages (chrome://, extensions page)
 - [x] Fixed tab stop active circle contrast (darkened from #e65100 to #bf360c)
 
-## Phase 8 — Element Inspector ✅
-
-Click-to-inspect any element and view its accessibility properties. Hidden behind a settings toggle ("Element inspector") while being evaluated for usefulness.
-
-**Interaction:**
-- [x] Toggle inspector mode — hover highlights elements with violet overlay, click selects
-- [x] Separate picker from contrast checker (violet tint vs blue), auto-starts on tab entry
-- [x] Mutual exclusivity with contrast element picker and pixel picker
-- [x] Hidden by default — enable via gear menu "Element inspector" toggle (persisted to storage)
-
-**Properties shown:**
-- [x] Computed accessible name (and source — `aria-label`, `aria-labelledby`, content, `alt`, `title`, `placeholder`, `label`)
-- [x] Role (explicit ARIA role or implicit HTML role)
-- [x] States & properties (`aria-expanded`, `aria-required`, `aria-checked`, etc.)
-- [x] Focusable / in tab order / tabindex value
-- [x] Missing required properties for explicit roles (e.g. `role="checkbox"` without `aria-checked`)
-- [x] Highlight inspected element on page
-
-## Phase 9 — Checklist Improvements
-
-Refine the manual checklist UX and workflow.
-
-- [ ] Per-page checklist state (track progress per URL)
-- [ ] Better auto-populate accuracy and feedback
-- [ ] Checklist export integration (include in HTML/JSON reports)
-
-## Phase 10 — Issue Navigator & Auto-Rescan
-
-Streamline the scan workflow with guided issue navigation and automatic re-scanning.
-
-- [ ] Step-by-step issue stepper — walk through violations one at a time, scrolling to each on the page
-- [ ] Re-scan on page navigation — detect URL changes, prompt or auto-rescan
-
-## Phase 11 — Manual Tab Stops ✅
+## Phase 8 — Manual Tab Stops ✅
 
 Interactive tab stop list with reorder, highlight, and export.
 
@@ -147,7 +114,7 @@ Interactive tab stop list with reorder, highlight, and export.
 - [x] Auto-select moved item after reorder
 - [x] JSON export of tab stop order with selectors, roles, and trap info
 
-## Phase 12 — Plain Language Mode ✅
+## Phase 9 — Plain Language Mode ✅
 
 Make results accessible to non-technical users.
 
@@ -157,15 +124,7 @@ Make results accessible to non-technical users.
 - [x] Settings gear menu in header with toggle switch
 - [x] Exports and copy always use technical text regardless of mode
 
-## Phase 13 — Quality of Life
-
-Keyboard navigation, export improvements, and extension settings.
-
-- [ ] Keyboard navigation within the side panel (arrow keys, focus management)
-- [ ] AI-friendly export format (structured for pasting into LLM prompts)
-- [ ] Extension options page (when there's enough config to justify it)
-
-## Phase 14 — Color Picker & Swatch Comparison ✅
+## Phase 10 — Color Picker & Swatch Comparison ✅
 
 Pixel-level eyedropper and swatch comparison grid for arbitrary color contrast checks.
 
@@ -211,3 +170,97 @@ Pixel-level eyedropper and swatch comparison grid for arbitrary color contrast c
 - [x] Magnifier hidden when cursor leaves the page
 - [x] Colour suggestion layout wraps cleanly at narrow widths
 - [x] Scan button moved from header to Scan tab
+
+## Phase 11 — Element Inspector ✅
+
+Click-to-inspect any element and view its accessibility properties. Hidden behind a settings toggle ("Element inspector") while being evaluated for usefulness.
+
+**Interaction:**
+- [x] Toggle inspector mode — hover highlights elements with violet overlay, click selects
+- [x] Separate picker from contrast checker (violet tint vs blue), auto-starts on tab entry
+- [x] Mutual exclusivity with contrast element picker and pixel picker
+- [x] Hidden by default — enable via gear menu "Element inspector" toggle (persisted to storage)
+
+**Properties shown:**
+- [x] Computed accessible name (and source — `aria-label`, `aria-labelledby`, content, `alt`, `title`, `placeholder`, `label`)
+- [x] Role (explicit ARIA role or implicit HTML role)
+- [x] States & properties (`aria-expanded`, `aria-required`, `aria-checked`, etc.)
+- [x] Focusable / in tab order / tabindex value
+- [x] Missing required properties for explicit roles (e.g. `role="checkbox"` without `aria-checked`)
+- [x] Highlight inspected element on page
+
+## Phase 12 — Assessment-Style Checklist ✅
+
+Restructure the checklist from POUR-principle grouping to activity-based grouping inspired by [Accessibility Insights](https://github.com/microsoft/accessibility-insights-web). Groups criteria by testing domain (Keyboard, Focus, Images, etc.) instead of abstract WCAG principles, making the checklist more actionable.
+
+**Data model:**
+- [x] New `AssessmentCategory` type: key, label, order, getting-started text, criterion IDs
+- [x] 15 categories: Automated Checks, Keyboard, Focus, Headings & Landmarks, Links & Navigation, Images, Sensory & Color, Adaptable Content, Forms & Errors, Widgets, Timed Events, Multimedia, Language, Pointer & Motion, Predictable Behaviour
+- [x] Each category maps to a subset of the existing 50 WCAG criteria (regrouped, not changed)
+- [x] Getting-started text per category: 1–2 paragraphs explaining who this helps and what to look for
+
+**UI:**
+- [x] Numbered collapsible category sections replace POUR `<details>` sections
+- [x] Each category expands to show "Getting started" blurb then individual criteria
+- [x] Category header shows aggregate progress (e.g. "3/5 tested") and fail count
+- [x] "Automated checks" category at top — lists `canAutoDetect` criteria, links to scan
+- [x] Overall progress bar and action buttons (auto-populate, reset) unchanged
+- [x] Individual `ChecklistItem` component unchanged
+
+**Migration:**
+- [x] `PRINCIPLES` → `ASSESSMENT_CATEGORIES` array
+- [x] `PrincipleSection` → `CategorySection` component
+- [x] `usePrincipleProgress` → `useCategoryProgress` hook
+
+## Phase 12b — Guided Assessment Flow ✅
+
+Inline accordion checklist: expanding a category shows a stepper within the list, keeping progress bar, action buttons, and all other categories visible.
+
+- [x] Remove Automated Checks virtual category (14 categories remain)
+- [x] Merged "Scan" + "Auto-populate" into a single "Scan & auto-populate" button
+- [x] Inline accordion — clicking a category expands it in-place; clicking again collapses
+- [x] Opening one category auto-closes any other
+- [x] Expanded view: progress dots, getting started, criterion card, prev/next nav
+- [x] Large Pass / Fail / N/A buttons (full-width, labelled words)
+- [x] Auto-advance on status change (Pass/Fail/N/A advances to next criterion)
+- [x] Last criterion answered auto-opens next category (collapses if last)
+- [x] Collapsible "Getting started" section, open by default on first criterion
+- [x] Violation indicator when scan flagged elements for current criterion
+- [x] Element highlighting via HIGHLIGHT_ALL for criteria with scan violations
+- [x] Highlights clear on criterion navigation and tab switch
+- [x] Criterion highlight map built from scan violations via AXE_TO_WCAG + tag parsing
+- [x] Progress bar + scan button + reset always visible regardless of expanded state
+
+## Phase 12c — Automated Verification
+
+Automate manual verification steps for the checklist to reduce testing overhead.
+
+- [ ] Automated build verification (`pnpm build` in CI)
+- [ ] Category count assertion (14 categories, 50 total criteria)
+- [ ] Checklist store unit tests (navigation state, auto-advance, toggle behaviour)
+- [ ] Progress calculation unit tests (per-category and overall)
+- [ ] Auto-populate integration test (scan → auto-populate → correct statuses)
+- [ ] Highlight map unit test (violations → criterion ID mapping)
+
+## Phase 13 — Checklist Improvements
+
+Refine the checklist workflow beyond the restructure.
+
+- [ ] Per-page checklist state (track progress per URL)
+- [ ] Better auto-populate accuracy and feedback
+- [ ] Checklist export integration (include in HTML/JSON reports)
+
+## Phase 14 — Issue Navigator & Auto-Rescan
+
+Streamline the scan workflow with guided issue navigation and automatic re-scanning.
+
+- [ ] Step-by-step issue stepper — walk through violations one at a time, scrolling to each on the page
+- [ ] Re-scan on page navigation — detect URL changes, prompt or auto-rescan
+
+## Phase 15 — Quality of Life
+
+Keyboard navigation, export improvements, and extension settings.
+
+- [ ] Keyboard navigation within the side panel (arrow keys, focus management)
+- [ ] AI-friendly export format (structured for pasting into LLM prompts)
+- [ ] Extension options page (when there's enough config to justify it)

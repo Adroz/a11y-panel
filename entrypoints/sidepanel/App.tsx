@@ -10,7 +10,6 @@ import { ViolationList } from "@/components/results/ViolationList";
 import { TabStopsToggle } from "@/components/scan/TabStopsToggle";
 import { TabStopList } from "@/components/tabstops/TabStopList";
 import { ChecklistView } from "@/components/checklist/ChecklistView";
-import { ExportButtons } from "@/components/scan/ExportButtons";
 import { ContrastActions, type ContrastView } from "@/components/contrast/ContrastActions";
 import { ContrastSummary } from "@/components/contrast/ContrastSummary";
 import { ContrastFailureList } from "@/components/contrast/ContrastFailureList";
@@ -80,6 +79,11 @@ export function App() {
       inspectorReset();
     }
 
+    // Clear checklist highlights when leaving Checklist tab
+    if (prevTab === "checklist") {
+      chrome.runtime.sendMessage({ type: "CLEAR_HIGHLIGHTS" }).catch(() => {});
+    }
+
     // Auto-run contrast checker when entering Contrast tab for the first time
     if (activeTab === "contrast" && contrastView === "checker" && !contrastAuditResult) {
       runAudit();
@@ -140,7 +144,6 @@ export function App() {
             {status === "complete" && <FilterBar />}
 
             <ViolationList />
-            <ExportButtons />
             <ScanHistory />
 
             {status === "idle" && (
