@@ -244,15 +244,18 @@ Vitest test suite for checklist data model and store logic.
 - [x] Highlight map unit tests (violations → criterion ID mapping, multi-node, multi-criterion)
 - [x] `pnpm test` script (50 tests across 5 test files)
 
-## Phase 13 — Tab Stop Improvements
+## Phase 13 — Tab Stop Improvements ✅
 
 Enhance tab stops with persistent state, auto-show, and checklist integration.
 
-- [ ] Auto-show tab stops when entering Tab Stops tab (re-hide on leave)
-- [ ] Persist reordered tab stop order across tab switches (don't re-walk DOM)
-- [ ] Remember toggle preference (on/off) in chrome.storage
-- [ ] Export with original + reordered position columns
-- [ ] Focus category in checklist shows captured tab stop order inline
+- [x] Auto-show tab stops when entering Tab Stops tab (re-hide on leave)
+- [x] Persist reordered tab stop order across tab switches (don't re-walk DOM)
+- [x] Remember toggle preference (on/off) in chrome.storage
+- [x] Export with original + reordered position columns (HTML and JSON)
+- [x] Focus category in checklist shows captured tab stop order inline
+- [x] Sticky header and tab nav — content scrolls underneath
+- [x] Sticky prev/next nav in tab stop list
+- [x] Remove redundant Element column from exports (Role column uses tagName fallback)
 
 ## Phase 14 — Contrast Fix Suggestions
 

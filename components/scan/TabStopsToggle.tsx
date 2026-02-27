@@ -7,6 +7,8 @@ export function TabStopsToggle() {
   const toggle = useTabStopsStore((s) => s.toggle);
 
   const isOn = status === "on";
+  const isHidden = status === "hidden";
+  const hasData = isOn || isHidden;
   const isLoading = status === "loading";
 
   return (
@@ -38,10 +40,11 @@ export function TabStopsToggle() {
         {isLoading ? "Loading…" : isOn ? "Hide tab stops" : "Show tab stops"}
       </button>
 
-      {isOn && (
+      {hasData && (
         <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
           <p className="text-sm text-blue-700">
             <span className="font-semibold">{count}</span> tab stop{count !== 1 && "s"} found
+            {isHidden && <span className="ml-1 text-blue-500">(overlay hidden)</span>}
           </p>
         </div>
       )}

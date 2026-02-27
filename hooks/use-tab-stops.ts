@@ -1,7 +1,9 @@
 import { create } from "zustand";
 import type { FocusTrapInfo, ResponseMessage, SerializedTabStop } from "@/types/messages";
 
-type TabStopsStatus = "off" | "loading" | "on" | "error";
+type TabStopsStatus = "off" | "loading" | "on" | "hidden" | "error";
+
+const STORAGE_KEY = "tabStopsAutoShow";
 
 interface TabStopsState {
   status: TabStopsStatus;
@@ -10,10 +12,16 @@ interface TabStopsState {
   error: string | null;
   stops: SerializedTabStop[];
   order: string[];
+  originalOrder: string[];
   activeStopIndex: number | null;
+  autoShowPreference: boolean;
 
+  enable: () => void;
   toggle: () => void;
+  hide: () => void;
+  show: () => void;
   reset: () => void;
+  loadPreference: () => void;
   selectStop: (index: number | null) => void;
   nextStop: () => void;
   prevStop: () => void;
@@ -27,24 +35,11 @@ export const useTabStopsStore = create<TabStopsState>((set, get) => ({
   error: null,
   stops: [],
   order: [],
+  originalOrder: [],
   activeStopIndex: null,
+  autoShowPreference: false,
 
-  toggle: () => {
-    const { status } = get();
-
-    if (status === "on") {
-      chrome.runtime.sendMessage({ type: "DISABLE_TAB_STOPS" }, (response: ResponseMessage) => {
-        if (chrome.runtime.lastError) {
-          set({ status: "off", count: 0, traps: [], stops: [], order: [], activeStopIndex: null });
-          return;
-        }
-        if (response.type === "TAB_STOPS_DISABLED") {
-          set({ status: "off", count: 0, traps: [], stops: [], order: [], activeStopIndex: null });
-        }
-      });
-      return;
-    }
-
+  enable: () => {
     set({ status: "loading", error: null });
     chrome.runtime.sendMessage({ type: "ENABLE_TAB_STOPS" }, (response: ResponseMessage) => {
       if (chrome.runtime.lastError) {
@@ -56,17 +51,22 @@ export const useTabStopsStore = create<TabStopsState>((set, get) => ({
       }
 
       switch (response.type) {
-        case "TAB_STOPS_ENABLED":
+        case "TAB_STOPS_ENABLED": {
+          const domOrder = response.stops.map((s) => s.selector);
           set({
             status: "on",
             count: response.count,
             traps: response.traps,
             stops: response.stops,
-            order: response.stops.map((s) => s.selector),
+            order: domOrder,
+            originalOrder: domOrder,
             activeStopIndex: null,
             error: null,
+            autoShowPreference: true,
           });
+          chrome.storage.local.set({ [STORAGE_KEY]: true });
           break;
+        }
         case "TAB_STOPS_ERROR":
         case "SCAN_ERROR":
           set({ status: "error", error: response.error });
@@ -75,9 +75,67 @@ export const useTabStopsStore = create<TabStopsState>((set, get) => ({
     });
   },
 
+  toggle: () => {
+    const { status, enable } = get();
+
+    if (status === "on" || status === "hidden") {
+      // Full disable — wipe everything
+      chrome.runtime.sendMessage({ type: "DISABLE_TAB_STOPS" }, (response: ResponseMessage) => {
+        if (chrome.runtime.lastError) {
+          set({ status: "off", count: 0, traps: [], stops: [], order: [], originalOrder: [], activeStopIndex: null, autoShowPreference: false });
+          chrome.storage.local.set({ [STORAGE_KEY]: false });
+          return;
+        }
+        if (response.type === "TAB_STOPS_DISABLED") {
+          set({ status: "off", count: 0, traps: [], stops: [], order: [], originalOrder: [], activeStopIndex: null, autoShowPreference: false });
+          chrome.storage.local.set({ [STORAGE_KEY]: false });
+        }
+      });
+      return;
+    }
+
+    enable();
+  },
+
+  hide: () => {
+    const { status } = get();
+    if (status !== "on") return;
+
+    chrome.runtime.sendMessage({ type: "HIDE_TAB_STOPS_OVERLAY" }).catch(() => {});
+    set({ status: "hidden", activeStopIndex: null });
+  },
+
+  show: () => {
+    const { status, enable } = get();
+    if (status !== "hidden") return;
+
+    chrome.runtime.sendMessage({ type: "SHOW_TAB_STOPS_OVERLAY" }, (response: ResponseMessage) => {
+      if (chrome.runtime.lastError) {
+        // Content script lost — fall back to full enable
+        enable();
+        return;
+      }
+
+      if (response.type === "TAB_STOPS_OVERLAY_SHOWN") {
+        set({ status: "on" });
+      } else if (response.type === "TAB_STOPS_ERROR") {
+        // Stored data lost (page navigated) — fall back to full enable
+        enable();
+      }
+    });
+  },
+
   reset: () => {
     chrome.runtime.sendMessage({ type: "DISABLE_TAB_STOPS" }).catch(() => {});
-    set({ status: "off", count: 0, traps: [], error: null, stops: [], order: [], activeStopIndex: null });
+    set({ status: "off", count: 0, traps: [], error: null, stops: [], order: [], originalOrder: [], activeStopIndex: null });
+  },
+
+  loadPreference: () => {
+    chrome.storage.local.get(STORAGE_KEY, (result) => {
+      if (result[STORAGE_KEY] === true) {
+        set({ autoShowPreference: true });
+      }
+    });
   },
 
   selectStop: (index: number | null) => {

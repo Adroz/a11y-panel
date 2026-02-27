@@ -32,6 +32,8 @@ export type RequestMessage =
   | { type: "HIGHLIGHT_TAB_STOP"; selector: string }
   | { type: "CLEAR_TAB_STOP_HIGHLIGHT" }
   | { type: "REORDER_TAB_STOPS"; order: string[] }
+  | { type: "HIDE_TAB_STOPS_OVERLAY" }
+  | { type: "SHOW_TAB_STOPS_OVERLAY" }
   | { type: "RUN_CONTRAST_AUDIT" }
   | { type: "ENABLE_CONTRAST_PICKER" }
   | { type: "DISABLE_CONTRAST_PICKER" }
@@ -57,6 +59,8 @@ export type ResponseMessage =
   | { type: "TAB_STOP_HIGHLIGHTED" }
   | { type: "TAB_STOP_HIGHLIGHT_CLEARED" }
   | { type: "TAB_STOPS_REORDERED" }
+  | { type: "TAB_STOPS_OVERLAY_HIDDEN" }
+  | { type: "TAB_STOPS_OVERLAY_SHOWN" }
   | { type: "CONTRAST_AUDIT_COMPLETE"; result: ContrastAuditResult }
   | { type: "CONTRAST_AUDIT_ERROR"; error: string }
   | { type: "CONTRAST_PICKER_ENABLED" }

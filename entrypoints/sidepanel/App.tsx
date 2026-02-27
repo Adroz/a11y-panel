@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { PanelHeader } from "@/components/layout/PanelHeader";
 import { PanelNav, type Tab } from "@/components/layout/PanelNav";
 import { ScanSummary } from "@/components/scan/ScanSummary";
@@ -33,7 +33,11 @@ export function App() {
   const startScan = useScanStore((s) => s.startScan);
   const error = useScanStore((s) => s.error);
   const tabStopsStatus = useTabStopsStore((s) => s.status);
-  const tabStopsReset = useTabStopsStore((s) => s.reset);
+  const tabStopsHide = useTabStopsStore((s) => s.hide);
+  const tabStopsShow = useTabStopsStore((s) => s.show);
+  const tabStopsEnable = useTabStopsStore((s) => s.enable);
+  const tabStopsAutoShow = useTabStopsStore((s) => s.autoShowPreference);
+  const loadTabStopsPreference = useTabStopsStore((s) => s.loadPreference);
   const loadSettings = useSettingsStore((s) => s.loadFromStorage);
   const showInspector = useSettingsStore((s) => s.showInspector);
   const contrastMode = useContrastStore((s) => s.mode);
@@ -54,7 +58,8 @@ export function App() {
 
   useEffect(() => {
     loadSettings();
-  }, [loadSettings]);
+    loadTabStopsPreference();
+  }, [loadSettings, loadTabStopsPreference]);
 
   // Handle tab switches
   useEffect(() => {
@@ -63,9 +68,9 @@ export function App() {
 
     if (prevTab === activeTab) return;
 
-    // Clear tab stops when leaving Tab Stops tab
+    // Hide tab stop overlay when leaving Tab Stops tab (preserve data)
     if (prevTab === "tabstops" && tabStopsStatus === "on") {
-      tabStopsReset();
+      tabStopsHide();
     }
 
     // Clean up pickers when leaving Contrast tab
@@ -84,6 +89,15 @@ export function App() {
       chrome.runtime.sendMessage({ type: "CLEAR_HIGHLIGHTS" }).catch(() => {});
     }
 
+    // Auto-show/enable tab stops when entering Tab Stops tab
+    if (activeTab === "tabstops") {
+      if (tabStopsStatus === "hidden") {
+        tabStopsShow();
+      } else if (tabStopsStatus === "off" && tabStopsAutoShow) {
+        tabStopsEnable();
+      }
+    }
+
     // Auto-run contrast checker when entering Contrast tab for the first time
     if (activeTab === "contrast" && contrastView === "checker" && !contrastAuditResult) {
       runAudit();
@@ -93,18 +107,20 @@ export function App() {
     if (activeTab === "inspect" && inspectorMode === "idle") {
       inspectorToggle();
     }
-  }, [activeTab, tabStopsStatus, tabStopsReset, contrastMode, contrastReset, pixelPickerMode, pixelPickerReset, contrastView, contrastAuditResult, runAudit, inspectorMode, inspectorReset, inspectorToggle]);
+  }, [activeTab, tabStopsStatus, tabStopsHide, tabStopsShow, tabStopsEnable, tabStopsAutoShow, contrastMode, contrastReset, pixelPickerMode, pixelPickerReset, contrastView, contrastAuditResult, runAudit, inspectorMode, inspectorReset, inspectorToggle]);
+
+  const navigateToTabStops = useCallback(() => setActiveTab("tabstops"), []);
 
   const activeError =
     (contrastView === "checker" && contrastError) ||
     (contrastView === "color-picker" && pixelPickerError);
 
   return (
-    <div className="flex min-h-screen flex-col bg-zinc-50">
+    <div className="flex h-screen flex-col bg-zinc-50">
       <PanelHeader />
       <PanelNav activeTab={activeTab} onTabChange={setActiveTab} hiddenTabs={showInspector ? [] : ["inspect"]} />
 
-      <main className="flex-1 space-y-3 p-4">
+      <main className="flex-1 space-y-3 overflow-y-auto p-4">
         {activeTab === "scan" && (
           <>
             <button
@@ -157,8 +173,8 @@ export function App() {
         {activeTab === "tabstops" && (
           <>
             <TabStopsToggle />
-            {tabStopsStatus === "on" && <TabStopList />}
-            {tabStopsStatus !== "on" && (
+            {(tabStopsStatus === "on" || tabStopsStatus === "hidden") && <TabStopList />}
+            {tabStopsStatus !== "on" && tabStopsStatus !== "hidden" && (
               <p className="text-xs text-zinc-400">
                 Visualises the keyboard tab order on the current page. Numbered
                 circles show each focusable element, connected by lines showing
@@ -222,7 +238,7 @@ export function App() {
           </>
         )}
 
-        {activeTab === "checklist" && <ChecklistView />}
+        {activeTab === "checklist" && <ChecklistView onNavigateToTabStops={navigateToTabStops} />}
       </main>
     </div>
   );

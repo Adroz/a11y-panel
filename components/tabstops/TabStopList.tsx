@@ -19,6 +19,7 @@ export function TabStopList() {
   const prevStop = useTabStopsStore((s) => s.prevStop);
   const reorder = useTabStopsStore((s) => s.reorder);
   const traps = useTabStopsStore((s) => s.traps);
+  const originalOrder = useTabStopsStore((s) => s.originalOrder);
 
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [movedSelector, setMovedSelector] = useState<string | null>(null);
@@ -144,8 +145,8 @@ export function TabStopList() {
 
   // --- Export ---
   const handleExport = useCallback(() => {
-    exportTabStopsJSON(orderedStops, traps);
-  }, [orderedStops, traps]);
+    exportTabStopsJSON(orderedStops, traps, originalOrder);
+  }, [orderedStops, traps, originalOrder]);
 
   const displayNum = activeStopIndex !== null ? activeStopIndex + 1 : "–";
 
@@ -290,8 +291,8 @@ export function TabStopList() {
         }
       `}</style>
 
-      {/* Sticky nav bar */}
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-zinc-200 bg-zinc-50 px-3 py-2">
+      {/* Sticky nav bar — negative offsets fill main's p-4 padding so it sticks flush under the tab nav */}
+      <div className="-mx-4 sticky top-[-16px] z-10 flex items-center justify-between border-b border-zinc-200 bg-zinc-50 px-4 pb-1.5 pt-[calc(16px+0.375rem)]">
         <button
           onClick={prevStop}
           className="cursor-pointer rounded bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-600 hover:bg-zinc-200"

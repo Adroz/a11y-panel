@@ -13,6 +13,7 @@ export interface ExportData {
   tabStops?: {
     stops: SerializedTabStop[];
     order: string[];
+    originalOrder: string[];
     traps: FocusTrapInfo[];
   };
   contrastAudit?: ContrastAuditResult;
@@ -171,12 +172,15 @@ function buildContrastSection(audit: ContrastAuditResult | undefined): string {
 function buildTabStopsSection(tabStops: ExportData["tabStops"]): string {
   if (!tabStops || tabStops.stops.length === 0) return "";
 
-  const { stops, order, traps } = tabStops;
+  const { stops, order, originalOrder, traps } = tabStops;
   const trapSelectors = new Set(traps.flatMap((t) => {
     return stops
       .filter((_, i) => t.tabStopIndices.includes(i))
       .map((s) => s.selector);
   }));
+
+  const originalIndexMap = new Map(originalOrder.map((sel, i) => [sel, i + 1]));
+  const hasReorders = order.some((sel, i) => (originalIndexMap.get(sel) ?? i + 1) !== i + 1);
 
   const rows = order
     .map((selector, i) => {
@@ -186,26 +190,39 @@ function buildTabStopsSection(tabStops: ExportData["tabStops"]): string {
       const trapBadge = isTrap
         ? ' <span style="display:inline-block;padding:1px 6px;border-radius:9999px;font-size:10px;font-weight:600;background:#dc2626;color:#fff;">TRAP</span>'
         : "";
+      const origIdx = originalIndexMap.get(selector) ?? i + 1;
+      const isReordered = origIdx !== i + 1;
+      const reorderBadge = isReordered
+        ? ` <span style="font-size:10px;color:#2563eb;" title="Originally #${origIdx}">&#8203;↕</span>`
+        : "";
+      const origCell = hasReorders
+        ? `<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:14px;color:${isReordered ? "#2563eb" : "#9ca3af"};text-align:center;">${origIdx}</td>`
+        : "";
       return `
           <tr${isTrap ? ' style="background:#fef2f2;"' : ""}>
-            <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:14px;font-weight:600;color:#1f2937;text-align:center;">${i + 1}</td>
-            <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">${escapeHtml(stop.tagName)}${trapBadge}</td>
-            <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">${escapeHtml(stop.role)}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:14px;font-weight:600;color:#1f2937;text-align:center;">${i + 1}${reorderBadge}</td>
+            ${origCell}
+            <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">${escapeHtml(stop.role || stop.tagName)}${trapBadge}</td>
             <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">${escapeHtml(stop.accessibleName || "—")}</td>
             <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:12px;color:#6b7280;">${escapeHtml(stop.selector)}</td>
           </tr>`;
     })
     .join("");
 
+  const origHeader = hasReorders
+    ? '<th style="text-align:center;padding:10px 12px;font-size:13px;font-weight:600;color:#374151;border-bottom:2px solid #e5e7eb;width:72px;">Original #</th>'
+    : "";
+
   return `
       <div style="margin-top:40px;">
         <h2 style="font-size:20px;font-weight:700;color:#111827;margin:0 0 16px;padding-bottom:8px;border-bottom:2px solid #e5e7eb;">Tab Stops (${order.length})</h2>
         ${traps.length > 0 ? `<p style="font-size:14px;color:#dc2626;margin:0 0 12px;"><strong>${traps.length} focus trap${traps.length !== 1 ? "s" : ""}</strong> detected</p>` : ""}
+        ${hasReorders ? '<p style="font-size:13px;color:#6b7280;margin:0 0 12px;">Tab stop order has been manually adjusted. The <strong>Desired #</strong> column shows the recommended order; <strong>Original #</strong> shows the DOM order.</p>' : ""}
         <table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;">
           <thead>
             <tr style="background:#f9fafb;">
-              <th style="text-align:center;padding:10px 12px;font-size:13px;font-weight:600;color:#374151;border-bottom:2px solid #e5e7eb;width:48px;">#</th>
-              <th style="text-align:left;padding:10px 12px;font-size:13px;font-weight:600;color:#374151;border-bottom:2px solid #e5e7eb;">Element</th>
+              <th style="text-align:center;padding:10px 12px;font-size:13px;font-weight:600;color:#374151;border-bottom:2px solid #e5e7eb;width:72px;">${hasReorders ? "Desired #" : "#"}</th>
+              ${origHeader}
               <th style="text-align:left;padding:10px 12px;font-size:13px;font-weight:600;color:#374151;border-bottom:2px solid #e5e7eb;">Role</th>
               <th style="text-align:left;padding:10px 12px;font-size:13px;font-weight:600;color:#374151;border-bottom:2px solid #e5e7eb;">Name</th>
               <th style="text-align:left;padding:10px 12px;font-size:13px;font-weight:600;color:#374151;border-bottom:2px solid #e5e7eb;">Selector</th>

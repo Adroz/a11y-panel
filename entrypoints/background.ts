@@ -18,6 +18,8 @@ export default defineBackground(() => {
         case "HIGHLIGHT_TAB_STOP":
         case "CLEAR_TAB_STOP_HIGHLIGHT":
         case "REORDER_TAB_STOPS":
+        case "HIDE_TAB_STOPS_OVERLAY":
+        case "SHOW_TAB_STOPS_OVERLAY":
         case "RUN_CONTRAST_AUDIT":
         case "ENABLE_CONTRAST_PICKER":
         case "DISABLE_CONTRAST_PICKER":

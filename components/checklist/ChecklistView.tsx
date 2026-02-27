@@ -10,9 +10,14 @@ import {
 import { useScanStore } from "@/hooks/use-scan";
 import { useSettingsStore } from "@/hooks/use-settings";
 import { getChecklistText, getChecklistSteps } from "@/lib/plain-language";
+import { TabStopSummary } from "@/components/checklist/TabStopSummary";
 import type { HighlightTarget } from "@/types/messages";
 
-export function ChecklistView() {
+interface ChecklistViewProps {
+  onNavigateToTabStops: () => void;
+}
+
+export function ChecklistView({ onNavigateToTabStops }: ChecklistViewProps) {
   const loadFromStorage = useChecklistStore((s) => s.loadFromStorage);
   const resetAll = useChecklistStore((s) => s.resetAll);
   const activeCategoryKey = useChecklistStore((s) => s.activeCategoryKey);
@@ -89,6 +94,7 @@ export function ChecklistView() {
             highlightMap={highlightMap}
             gettingStartedOpen={gettingStartedOpen}
             onToggleGettingStarted={setGettingStartedOpen}
+            onNavigateToTabStops={onNavigateToTabStops}
           />
         ))}
       </div>
@@ -146,6 +152,7 @@ function CategoryRow({
   highlightMap,
   gettingStartedOpen,
   onToggleGettingStarted,
+  onNavigateToTabStops,
 }: {
   categoryKey: string;
   label: string;
@@ -155,6 +162,7 @@ function CategoryRow({
   highlightMap: Map<string, HighlightTarget[]>;
   gettingStartedOpen: boolean;
   onToggleGettingStarted: (open: boolean) => void;
+  onNavigateToTabStops: () => void;
 }) {
   const enterCategory = useChecklistStore((s) => s.enterCategory);
   const progress = useCategoryProgress(criteriaIds);
@@ -186,11 +194,13 @@ function CategoryRow({
       {/* Expanded content */}
       {isExpanded && (
         <ExpandedCategory
+          categoryKey={categoryKey}
           gettingStarted={gettingStarted}
           criteriaIds={criteriaIds}
           highlightMap={highlightMap}
           gettingStartedOpen={gettingStartedOpen}
           onToggleGettingStarted={onToggleGettingStarted}
+          onNavigateToTabStops={onNavigateToTabStops}
         />
       )}
     </div>
@@ -198,17 +208,21 @@ function CategoryRow({
 }
 
 function ExpandedCategory({
+  categoryKey,
   gettingStarted,
   criteriaIds,
   highlightMap,
   gettingStartedOpen,
   onToggleGettingStarted,
+  onNavigateToTabStops,
 }: {
+  categoryKey: string;
   gettingStarted: string;
   criteriaIds: string[];
   highlightMap: Map<string, HighlightTarget[]>;
   gettingStartedOpen: boolean;
   onToggleGettingStarted: (open: boolean) => void;
+  onNavigateToTabStops: () => void;
 }) {
   const activeCriterionIndex = useChecklistStore((s) => s.activeCriterionIndex);
   const nextCriterion = useChecklistStore((s) => s.nextCriterion);
@@ -253,6 +267,11 @@ function ExpandedCategory({
         isOpen={gettingStartedOpen}
         onToggle={onToggleGettingStarted}
       />
+
+      {/* Tab stop summary — Focus category only */}
+      {categoryKey === "focus" && (
+        <TabStopSummary onNavigateToTabStops={onNavigateToTabStops} />
+      )}
 
       {/* Criterion card */}
       <CriterionCard

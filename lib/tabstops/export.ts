@@ -5,10 +5,11 @@ interface TabStopExportData {
   timestamp: number;
   tabStops: {
     order: number;
+    originalOrder: number;
+    reordered: boolean;
     selector: string;
-    tagName: string;
-    accessibleName: string;
     role: string;
+    accessibleName: string;
     trapSelector: string | null;
   }[];
   focusTraps: {
@@ -31,18 +32,25 @@ function downloadBlob(blob: Blob, filename: string): void {
 export function exportTabStopsJSON(
   stops: SerializedTabStop[],
   traps: FocusTrapInfo[],
+  originalOrder: string[],
 ): void {
+  const originalIndexMap = new Map(originalOrder.map((sel, i) => [sel, i + 1]));
+
   const data: TabStopExportData = {
     url: window.location.href,
     timestamp: Date.now(),
-    tabStops: stops.map((s, i) => ({
-      order: i + 1,
-      selector: s.selector,
-      tagName: s.tagName,
-      accessibleName: s.accessibleName,
-      role: s.role,
-      trapSelector: s.trapSelector,
-    })),
+    tabStops: stops.map((s, i) => {
+      const origIdx = originalIndexMap.get(s.selector) ?? i + 1;
+      return {
+        order: i + 1,
+        originalOrder: origIdx,
+        reordered: origIdx !== i + 1,
+        selector: s.selector,
+        role: s.role || s.tagName,
+        accessibleName: s.accessibleName,
+        trapSelector: s.trapSelector,
+      };
+    }),
     focusTraps: traps.map((t) => ({
       selector: t.selector,
       stopOrders: t.tabStopIndices,

@@ -77,6 +77,16 @@ export default defineContentScript({
             handleReorderTabStops(message.order, sendResponse);
             return false;
 
+          case "HIDE_TAB_STOPS_OVERLAY":
+            hideTabStopOverlay();
+            clearHighlightRing();
+            sendResponse({ type: "TAB_STOPS_OVERLAY_HIDDEN" });
+            return false;
+
+          case "SHOW_TAB_STOPS_OVERLAY":
+            handleShowTabStopsOverlay(sendResponse);
+            return false;
+
           case "RUN_CONTRAST_AUDIT":
             handleContrastAudit(sendResponse);
             return false;
@@ -283,6 +293,24 @@ async function handleEnablePixelPicker(
       error: err instanceof Error ? err.message : String(err),
     });
   }
+}
+
+function handleShowTabStopsOverlay(sendResponse: (r: ResponseMessage) => void) {
+  if (storedTabStops.length === 0) {
+    sendResponse({ type: "TAB_STOPS_ERROR", error: "No tab stop data available. Page may have navigated." });
+    return;
+  }
+
+  // Refresh bounding rects for each stored element
+  const refreshed: TabStop[] = storedTabStops.map((stop, i) => ({
+    ...stop,
+    index: i + 1,
+    rect: stop.element.getBoundingClientRect(),
+  }));
+
+  storedTabStops = refreshed;
+  showTabStopOverlay(refreshed, storedTraps);
+  sendResponse({ type: "TAB_STOPS_OVERLAY_SHOWN" });
 }
 
 function handleEnableContrastPicker() {

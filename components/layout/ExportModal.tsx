@@ -16,6 +16,7 @@ export function ExportModal({ onClose }: { onClose: () => void }) {
   const checklistProgress = useChecklistProgress();
   const tabStops = useTabStopsStore((s) => s.stops);
   const tabStopsOrder = useTabStopsStore((s) => s.order);
+  const tabStopsOriginalOrder = useTabStopsStore((s) => s.originalOrder);
   const tabStopsTraps = useTabStopsStore((s) => s.traps);
   const contrastAudit = useContrastStore((s) => s.auditResult);
 
@@ -39,7 +40,7 @@ export function ExportModal({ onClose }: { onClose: () => void }) {
       violations: includeScan ? violations : [],
       checklistStatuses: includeChecklist ? checklistStatuses : {},
       tabStops: includeTabStops
-        ? { stops: tabStops, order: tabStopsOrder, traps: tabStopsTraps }
+        ? { stops: tabStops, order: tabStopsOrder, originalOrder: tabStopsOriginalOrder, traps: tabStopsTraps }
         : undefined,
       contrastAudit: includeContrast ? contrastAudit! : undefined,
     };
