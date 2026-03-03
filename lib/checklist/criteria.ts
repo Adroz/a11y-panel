@@ -279,7 +279,7 @@ export const WCAG_CRITERIA: WcagCriterion[] = [
       "Determine whether real text could achieve the same visual presentation.",
       "Verify that essential images of text (e.g., logos) have appropriate alt text.",
     ],
-    canAutoDetect: false,
+    canAutoDetect: true,
   },
   {
     id: "1.4.10",

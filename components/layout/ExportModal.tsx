@@ -19,6 +19,7 @@ export function ExportModal({ onClose }: { onClose: () => void }) {
   const tabStopsOriginalOrder = useTabStopsStore((s) => s.originalOrder);
   const tabStopsTraps = useTabStopsStore((s) => s.traps);
   const contrastAudit = useContrastStore((s) => s.auditResult);
+  const contrastFixes = useContrastStore((s) => s.appliedFixes);
 
   const hasScan = scanStatus === "complete";
   const hasChecklist = checklistProgress.tested > 0;
@@ -43,6 +44,7 @@ export function ExportModal({ onClose }: { onClose: () => void }) {
         ? { stops: tabStops, order: tabStopsOrder, originalOrder: tabStopsOriginalOrder, traps: tabStopsTraps }
         : undefined,
       contrastAudit: includeContrast ? contrastAudit! : undefined,
+      contrastFixes: includeContrast && contrastFixes.length > 0 ? contrastFixes : undefined,
     };
 
     if (format === "html") {

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { ResponseMessage } from "@/types/messages";
-import type { ContrastAuditResult, ContrastPickerResult } from "@/types/contrast";
+import type { ContrastAuditResult, ContrastPickerResult, AppliedFix } from "@/types/contrast";
 import { useColorPickerStore } from "./use-color-picker";
 import { useInspectorStore } from "./use-inspector";
 
@@ -12,10 +12,14 @@ interface ContrastState {
   pickerResult: ContrastPickerResult | null;
   highlightedSelector: string | null;
   error: string | null;
+  appliedFixes: AppliedFix[];
 
   runAudit: () => void;
   togglePicker: () => void;
   highlightElement: (selector: string | null) => void;
+  applyFix: (selector: string, originalHex: string, newHex: string, achievedRatio: number) => void;
+  revertFix: (selector: string) => void;
+  clearAllFixes: () => void;
   reset: () => void;
 }
 
@@ -25,12 +29,19 @@ export const useContrastStore = create<ContrastState>((set, get) => ({
   pickerResult: null,
   highlightedSelector: null,
   error: null,
+  appliedFixes: [],
 
   runAudit: () => {
-    const { mode } = get();
+    const { mode, appliedFixes } = get();
     // Disable picker if active
     if (mode === "picker-active") {
       chrome.runtime.sendMessage({ type: "DISABLE_CONTRAST_PICKER" }).catch(() => {});
+    }
+
+    // Clear applied fixes so audit sees original styles
+    if (appliedFixes.length > 0) {
+      chrome.runtime.sendMessage({ type: "CLEAR_CONTRAST_FIXES" }).catch(() => {});
+      set({ appliedFixes: [] });
     }
 
     set({ mode: "audit-loading", error: null, pickerResult: null });
@@ -120,13 +131,42 @@ export const useContrastStore = create<ContrastState>((set, get) => ({
     set({ highlightedSelector: selector });
   },
 
+  applyFix: (selector, originalHex, newHex, achievedRatio) => {
+    chrome.runtime.sendMessage({ type: "APPLY_CONTRAST_FIX", selector, property: "color", hex: newHex }).catch(() => {});
+    const { appliedFixes } = get();
+    const existing = appliedFixes.findIndex((f) => f.selector === selector);
+    const fix: AppliedFix = { selector, property: "color", originalHex, newHex, achievedRatio };
+    if (existing >= 0) {
+      const updated = [...appliedFixes];
+      updated[existing] = fix;
+      set({ appliedFixes: updated });
+    } else {
+      set({ appliedFixes: [...appliedFixes, fix] });
+    }
+  },
+
+  revertFix: (selector) => {
+    chrome.runtime.sendMessage({ type: "REVERT_CONTRAST_FIX", selector }).catch(() => {});
+    set({ appliedFixes: get().appliedFixes.filter((f) => f.selector !== selector) });
+  },
+
+  clearAllFixes: () => {
+    if (get().appliedFixes.length > 0) {
+      chrome.runtime.sendMessage({ type: "CLEAR_CONTRAST_FIXES" }).catch(() => {});
+      set({ appliedFixes: [] });
+    }
+  },
+
   reset: () => {
-    const { mode, highlightedSelector } = get();
+    const { mode, highlightedSelector, appliedFixes } = get();
     if (mode === "picker-active") {
       chrome.runtime.sendMessage({ type: "DISABLE_CONTRAST_PICKER" }).catch(() => {});
     }
     if (highlightedSelector) {
       chrome.runtime.sendMessage({ type: "CLEAR_CONTRAST_HIGHLIGHT" }).catch(() => {});
+    }
+    if (appliedFixes.length > 0) {
+      chrome.runtime.sendMessage({ type: "CLEAR_CONTRAST_FIXES" }).catch(() => {});
     }
     set({
       mode: "idle",
@@ -134,6 +174,7 @@ export const useContrastStore = create<ContrastState>((set, get) => ({
       pickerResult: null,
       highlightedSelector: null,
       error: null,
+      appliedFixes: [],
     });
   },
 }));

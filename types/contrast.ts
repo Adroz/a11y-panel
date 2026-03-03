@@ -53,3 +53,11 @@ export interface ColorSuggestion {
   achievedRatio: number;
   direction: "lighter" | "darker";
 }
+
+export interface AppliedFix {
+  selector: string;
+  property: "color";
+  originalHex: string;
+  newHex: string;
+  achievedRatio: number;
+}

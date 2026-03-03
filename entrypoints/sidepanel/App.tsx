@@ -73,7 +73,7 @@ export function App() {
       tabStopsHide();
     }
 
-    // Clean up pickers when leaving Contrast tab
+    // Clean up pickers when leaving Contrast tab (fixes persist)
     if (prevTab === "contrast") {
       if (contrastMode === "picker-active") contrastReset();
       if (pixelPickerMode === "active") pixelPickerReset();

@@ -46,6 +46,9 @@ export const AXE_TO_WCAG: Record<string, string[]> = {
   // 1.4.3 Contrast (Minimum)
   "color-contrast": ["1.4.3"],
 
+  // 1.4.5 Images of Text
+  "text-in-image": ["1.4.5"],
+
   // 1.4.4 Resize Text
   "meta-viewport": ["1.4.4"],
 

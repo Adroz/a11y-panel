@@ -43,7 +43,10 @@ export type RequestMessage =
   | { type: "ENABLE_PIXEL_PICKER"; screenshotDataUrl: string }
   | { type: "DISABLE_PIXEL_PICKER" }
   | { type: "ENABLE_INSPECTOR" }
-  | { type: "DISABLE_INSPECTOR" };
+  | { type: "DISABLE_INSPECTOR" }
+  | { type: "APPLY_CONTRAST_FIX"; selector: string; property: "color"; hex: string }
+  | { type: "REVERT_CONTRAST_FIX"; selector: string }
+  | { type: "CLEAR_CONTRAST_FIXES" };
 
 // Content Script → Background → Side Panel
 export type ResponseMessage =
@@ -73,6 +76,9 @@ export type ResponseMessage =
   | { type: "PIXEL_PICKED"; hex: string }
   | { type: "INSPECTOR_ENABLED" }
   | { type: "INSPECTOR_DISABLED" }
-  | { type: "INSPECTOR_RESULT"; result: InspectorResult };
+  | { type: "INSPECTOR_RESULT"; result: InspectorResult }
+  | { type: "CONTRAST_FIX_APPLIED"; selector: string }
+  | { type: "CONTRAST_FIX_REVERTED"; selector: string }
+  | { type: "CONTRAST_FIXES_CLEARED" };
 
 export type Message = RequestMessage | ResponseMessage;

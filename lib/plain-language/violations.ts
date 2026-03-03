@@ -623,6 +623,12 @@ export const PLAIN_VIOLATIONS: Record<string, PlainViolation> = {
       "An element specifies a language using an invalid language code. Screen readers use language codes to switch pronunciation rules, so an invalid code may cause garbled speech.",
     fix: 'Change the language attribute to a valid language code (for example, "en" for English, "fr" for French, "es" for Spanish).',
   },
+  "text-in-image": {
+    help: "Some images on this page may contain text",
+    description:
+      "When images contain text, people who need to resize text, change fonts, or use screen readers may not be able to access the information. Use real text styled with CSS instead, unless the image is a logo or the specific appearance is essential.",
+    fix: "Replace each flagged image with real HTML text. If the image is a logo or the text presentation is essential, ensure it has appropriate alt text describing the content.",
+  },
   "video-caption": {
     help: "Videos need captions",
     description:

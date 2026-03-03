@@ -1,6 +1,6 @@
 import type { Impact, ScanViolation } from "@/types/scan";
 import type { SerializedTabStop, FocusTrapInfo } from "@/types/messages";
-import type { ContrastAuditResult } from "@/types/contrast";
+import type { ContrastAuditResult, AppliedFix } from "@/types/contrast";
 
 // Defined locally to avoid circular imports with hooks
 type CheckStatus = "untested" | "pass" | "fail" | "not-applicable";
@@ -17,6 +17,7 @@ export interface ExportData {
     traps: FocusTrapInfo[];
   };
   contrastAudit?: ContrastAuditResult;
+  contrastFixes?: AppliedFix[];
 }
 
 // ---------------------------------------------------------------------------
@@ -166,6 +167,54 @@ function buildContrastSection(audit: ContrastAuditResult | undefined): string {
 }
 
 // ---------------------------------------------------------------------------
+// Contrast Fixes HTML Section
+// ---------------------------------------------------------------------------
+
+function buildContrastFixesSection(fixes: AppliedFix[] | undefined): string {
+  if (!fixes || fixes.length === 0) return "";
+
+  const rows = fixes
+    .map((f) => {
+      return `
+          <tr>
+            <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:12px;color:#6b7280;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(f.selector)}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="display:inline-block;width:16px;height:16px;border-radius:3px;border:1px solid #d4d4d8;background:${escapeHtml(f.originalHex)};"></span>
+                <code style="font-size:12px;color:#374151;">${escapeHtml(f.originalHex)}</code>
+              </div>
+            </td>
+            <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="display:inline-block;width:16px;height:16px;border-radius:3px;border:1px solid #d4d4d8;background:${escapeHtml(f.newHex)};"></span>
+                <code style="font-size:12px;color:#374151;">${escapeHtml(f.newHex)}</code>
+              </div>
+            </td>
+            <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;font-weight:600;color:#16a34a;">${f.achievedRatio}:1</td>
+          </tr>`;
+    })
+    .join("");
+
+  return `
+      <div style="margin-top:24px;">
+        <h3 style="font-size:16px;font-weight:600;color:#111827;margin:0 0 12px;">Suggested Fixes</h3>
+        <table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;">
+          <thead>
+            <tr style="background:#f9fafb;">
+              <th style="text-align:left;padding:10px 12px;font-size:13px;font-weight:600;color:#374151;border-bottom:2px solid #e5e7eb;">Selector</th>
+              <th style="text-align:left;padding:10px 12px;font-size:13px;font-weight:600;color:#374151;border-bottom:2px solid #e5e7eb;">Original Color</th>
+              <th style="text-align:left;padding:10px 12px;font-size:13px;font-weight:600;color:#374151;border-bottom:2px solid #e5e7eb;">Suggested Color</th>
+              <th style="text-align:left;padding:10px 12px;font-size:13px;font-weight:600;color:#374151;border-bottom:2px solid #e5e7eb;">Achieved Ratio</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      </div>`;
+}
+
+// ---------------------------------------------------------------------------
 // Tab Stops HTML Section
 // ---------------------------------------------------------------------------
 
@@ -240,7 +289,7 @@ function buildTabStopsSection(tabStops: ExportData["tabStops"]): string {
 // ---------------------------------------------------------------------------
 
 export function exportHTML(data: ExportData): void {
-  const { url, timestamp, violations, checklistStatuses, tabStops, contrastAudit } = data;
+  const { url, timestamp, violations, checklistStatuses, tabStops, contrastAudit, contrastFixes } = data;
 
   // Summary counts — count nodes (issues), not rules, to match UI
   const ruleCount = violations.length;
@@ -392,6 +441,7 @@ export function exportHTML(data: ExportData): void {
 
     <!-- Contrast Audit -->
     ${buildContrastSection(contrastAudit)}
+    ${buildContrastFixesSection(contrastFixes)}
 
     <!-- Tab Stops -->
     ${buildTabStopsSection(tabStops)}

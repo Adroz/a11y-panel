@@ -257,25 +257,26 @@ Enhance tab stops with persistent state, auto-show, and checklist integration.
 - [x] Sticky prev/next nav in tab stop list
 - [x] Remove redundant Element column from exports (Role column uses tagName fallback)
 
-## Phase 14 — Contrast Fix Suggestions
+## Phase 14 — Contrast Fix Suggestions ✅
 
 Live-preview contrast fixes on the page and track applied changes.
 
-- [ ] "Suggest fix" button on contrast audit failure rows
-- [ ] Live preview — apply suggested color to page element via inline style override
-- [ ] Track applied fixes in store (selector, property, original hex, new hex)
-- [ ] Include applied fixes in HTML/JSON export ("Suggested fixes" section)
-- [ ] Clear overrides on tab switch / reset (same as highlight cleanup)
+- [x] "Suggest fix" button on contrast audit failure rows
+- [x] Live preview — apply suggested color to page element via inline style override
+- [x] Track applied fixes in store (selector, property, original hex, new hex)
+- [x] Include applied fixes in HTML/JSON export ("Suggested fixes" section)
+- [x] Clear overrides on tab switch / reset (same as highlight cleanup)
 
-## Phase 15 — Text-in-Image Detection
+## Phase 15 — Text-in-Image Detection ✅
 
 Flag images that likely contain text for WCAG 1.4.5 (Images of Text) review.
 
-- [ ] Tier 1: metadata heuristics (SVG `<text>` elements, alt text keywords, filename patterns)
-- [ ] Tier 2: canvas edge-density analysis (Sobel edge detection, horizontal band detection)
-- [ ] Tier 3: progressive enhancement via TextDetector API when available
-- [ ] Flag images as "likely contains text" in scan results for manual review
-- [ ] Integration with checklist Images category
+- [x] Tier 1: metadata heuristics (SVG `<text>` elements, alt text keywords, filename patterns)
+- [x] Tier 2: canvas edge-density analysis (row variance, horizontal band detection)
+- [x] Tier 3: progressive enhancement via TextDetector API when available
+- [x] Flag images as "likely contains text" in scan results for manual review
+- [x] Integration with checklist via `text-in-image` → 1.4.5 auto-populate mapping
+- [x] Plain language mode support
 
 ## Phase 16 — Checklist Improvements
 

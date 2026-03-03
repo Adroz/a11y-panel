@@ -1,4 +1,6 @@
 import { FAST_PASS_CONFIG, mapAxeResults } from "@/lib/scanner";
+import { detectTextInImages } from "@/lib/scanner/text-in-image";
+import { IMPACT_ORDER } from "@/types/scan";
 import { highlightElement, highlightAll, clearHighlights } from "@/lib/highlighter";
 import {
   getTabStops,
@@ -21,6 +23,9 @@ import type { Message, ResponseMessage, SerializedTabStop } from "@/types/messag
 // Module-level state for tab stops so later messages can reference live elements
 let storedTabStops: TabStop[] = [];
 let storedTraps: FocusTrap[] = [];
+
+// Maps selector → original inline style.color (empty string if none was set)
+const contrastFixOverrides = new Map<string, string>();
 
 export default defineContentScript({
   matches: ["<all_urls>"],
@@ -130,6 +135,18 @@ export default defineContentScript({
             sendResponse({ type: "INSPECTOR_DISABLED" });
             return false;
 
+          case "APPLY_CONTRAST_FIX":
+            handleApplyContrastFix(message.selector, message.hex, sendResponse);
+            return false;
+
+          case "REVERT_CONTRAST_FIX":
+            handleRevertContrastFix(message.selector, sendResponse);
+            return false;
+
+          case "CLEAR_CONTRAST_FIXES":
+            handleClearContrastFixes(sendResponse);
+            return false;
+
           default:
             return false;
         }
@@ -143,6 +160,12 @@ async function handleScan(sendResponse: (r: ResponseMessage) => void) {
     const axe = await import("axe-core");
     const results = await axe.default.run(document, FAST_PASS_CONFIG);
     const violations = mapAxeResults(results.violations);
+
+    const textInImageViolation = await detectTextInImages();
+    if (textInImageViolation) {
+      violations.push(textInImageViolation);
+      violations.sort((a, b) => IMPACT_ORDER[a.impact] - IMPACT_ORDER[b.impact]);
+    }
 
     sendResponse({
       type: "SCAN_COMPLETE",
@@ -335,4 +358,47 @@ function handleEnableInspector() {
       chrome.runtime.sendMessage({ type: "INSPECTOR_DISABLED" }).catch(() => {});
     },
   );
+}
+
+function handleApplyContrastFix(selector: string, hex: string, sendResponse: (r: ResponseMessage) => void) {
+  const el = document.querySelector<HTMLElement>(selector);
+  if (!el) {
+    sendResponse({ type: "CONTRAST_FIX_APPLIED", selector });
+    return;
+  }
+  // Store original inline color on first override for this selector
+  if (!contrastFixOverrides.has(selector)) {
+    contrastFixOverrides.set(selector, el.style.color);
+  }
+  el.style.color = hex;
+  sendResponse({ type: "CONTRAST_FIX_APPLIED", selector });
+}
+
+function handleRevertContrastFix(selector: string, sendResponse: (r: ResponseMessage) => void) {
+  const el = document.querySelector<HTMLElement>(selector);
+  if (el && contrastFixOverrides.has(selector)) {
+    const original = contrastFixOverrides.get(selector)!;
+    if (original) {
+      el.style.color = original;
+    } else {
+      el.style.removeProperty("color");
+    }
+  }
+  contrastFixOverrides.delete(selector);
+  sendResponse({ type: "CONTRAST_FIX_REVERTED", selector });
+}
+
+function handleClearContrastFixes(sendResponse: (r: ResponseMessage) => void) {
+  for (const [selector, original] of contrastFixOverrides) {
+    const el = document.querySelector<HTMLElement>(selector);
+    if (el) {
+      if (original) {
+        el.style.color = original;
+      } else {
+        el.style.removeProperty("color");
+      }
+    }
+  }
+  contrastFixOverrides.clear();
+  sendResponse({ type: "CONTRAST_FIXES_CLEARED" });
 }
