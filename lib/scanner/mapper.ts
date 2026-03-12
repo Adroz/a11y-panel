@@ -1,5 +1,5 @@
 import type { Result } from "axe-core";
-import type { ScanViolation } from "@/types/scan";
+import type { ScanViolation, ScanPass } from "@/types/scan";
 import { IMPACT_ORDER, type Impact } from "@/types/scan";
 
 export function mapAxeResults(violations: Result[]): ScanViolation[] {
@@ -18,4 +18,8 @@ export function mapAxeResults(violations: Result[]): ScanViolation[] {
       })),
     }))
     .sort((a, b) => IMPACT_ORDER[a.impact] - IMPACT_ORDER[b.impact]);
+}
+
+export function mapAxePasses(passes: Result[]): ScanPass[] {
+  return passes.map((p) => ({ id: p.id, tags: p.tags }));
 }

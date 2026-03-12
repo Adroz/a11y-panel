@@ -1,4 +1,5 @@
-import type { ScanViolation } from "@/types/scan";
+import type { ScanViolation, ScanPass, CustomCheckCounts } from "@/types/scan";
+import { WCAG_CRITERIA } from "./criteria";
 
 /**
  * Maps axe-core rule IDs to their corresponding WCAG 2.1 success criterion IDs.
@@ -61,8 +62,7 @@ export const AXE_TO_WCAG: Record<string, string[]> = {
   // 2.1.1 Keyboard
   "scrollable-region-focusable": ["2.1.1"],
 
-  // 2.1.2 No Keyboard Trap
-  "no-trap-tabindex": ["2.1.2"],
+  // 2.1.2 No Keyboard Trap — no axe rule exists; detected via tab stop trap analysis
 
   // 2.2.1 Timing Adjustable
   "meta-refresh": ["2.2.1"],
@@ -107,10 +107,10 @@ export const AXE_TO_WCAG: Record<string, string[]> = {
   // 3.3.2 Labels or Instructions
   "select-name": ["3.3.2", "4.1.2"],
 
-  // 4.1.1 Parsing
-  "duplicate-id": ["4.1.1"],
-  "duplicate-id-active": ["4.1.1"],
-  "duplicate-id-aria": ["4.1.1"],
+  // 4.1.1 Parsing — obsolete in WCAG 2.2; axe deprecated its rules
+
+  // 4.1.2 Name, Role, Value (duplicate-id-aria remapped from deprecated 4.1.1)
+  "duplicate-id-aria": ["4.1.2"],
 
   // 4.1.2 Name, Role, Value
   "aria-allowed-attr": ["4.1.2"],
@@ -124,8 +124,7 @@ export const AXE_TO_WCAG: Record<string, string[]> = {
   "frame-title": ["4.1.2"],
   "image-redundant-alt": ["4.1.2"],
 
-  // 4.1.3 Status Messages
-  "aria-progressbar-name": ["4.1.3"],
+  // 4.1.3 Status Messages — no meaningful axe coverage; aria-progressbar-name is really 1.1.1
 };
 
 /**
@@ -140,34 +139,168 @@ function parseWcagTag(tag: string): string | null {
   return `${match[1]}.${match[2]}.${match[3]}`;
 }
 
+const AUTO_DETECT_IDS = new Set(
+  WCAG_CRITERIA.filter((c) => c.canAutoDetect).map((c) => c.id),
+);
+
+export interface AutoPopulateResult {
+  status: "fail" | "pass" | "not-applicable";
+  detail?: string;
+}
+
+function plural(n: number, singular: string, pluralForm?: string): string {
+  return n === 1 ? singular : (pluralForm ?? singular + "s");
+}
+
 /**
- * Takes scan violations from axe-core and returns a Map of WCAG criterion IDs
- * that should be auto-marked as "fail" in the manual checklist.
+ * Takes scan violations and passes from axe-core and returns a Map of WCAG
+ * criterion IDs that should be auto-populated in the manual checklist.
  *
- * Uses two strategies:
- * 1. Looks up the violation's rule ID in the AXE_TO_WCAG mapping.
- * 2. Parses the violation's own `tags` array for WCAG criterion references
- *    (e.g. "wcag111" → "1.1.1").
+ * Violations are always mapped to "fail". Passes are mapped to "pass" only for
+ * criteria with `canAutoDetect: true` and only if no violation already failed
+ * that criterion.
+ *
+ * Uses two strategies for both violations and passes:
+ * 1. Looks up the rule ID in the AXE_TO_WCAG mapping.
+ * 2. Parses the `tags` array for WCAG criterion references (e.g. "wcag111" → "1.1.1").
  */
 export function getAutoPopulatedResults(
   violations: ScanViolation[],
-): Map<string, "fail"> {
-  const results = new Map<string, "fail">();
+  passes: ScanPass[],
+  customChecks?: CustomCheckCounts,
+): Map<string, AutoPopulateResult> {
+  const results = new Map<string, AutoPopulateResult>();
+
+  // 1. Process custom checks (non-axe detections)
+  const checks = customChecks ?? {
+    trapCount: 0,
+    textSpacingFailCount: 0,
+    focusOrderInversionCount: 0,
+    focusVisibleMissingCount: 0,
+    captionFailCount: null,
+    keyboardFailCount: null,
+    hasMedia: false,
+    hasFormFields: false,
+  };
+
+  // 2.1.2 No Keyboard Trap
+  if (checks.trapCount > 0) {
+    const n = checks.trapCount;
+    results.set("2.1.2", { status: "fail", detail: `${n} keyboard ${plural(n, "trap")} detected` });
+  } else {
+    results.set("2.1.2", { status: "pass" });
+  }
+
+  // 1.4.12 Text Spacing
+  if (checks.textSpacingFailCount > 0) {
+    const n = checks.textSpacingFailCount;
+    results.set("1.4.12", { status: "fail", detail: `${n} ${plural(n, "element")} clipped or hidden when text spacing is adjusted` });
+  } else {
+    results.set("1.4.12", { status: "pass" });
+  }
+
+  // 2.4.3 Focus Order
+  if (checks.focusOrderInversionCount > 0) {
+    const n = checks.focusOrderInversionCount;
+    results.set("2.4.3", { status: "fail", detail: `${n} focus order ${plural(n, "inversion")} \u2014 tab stops move backward through the visual layout` });
+  } else {
+    results.set("2.4.3", { status: "pass" });
+  }
+
+  // 2.4.7 Focus Visible
+  if (checks.focusVisibleMissingCount > 0) {
+    const n = checks.focusVisibleMissingCount;
+    results.set("2.4.7", { status: "fail", detail: `${n} interactive ${plural(n, "element")} with no visible focus indicator` });
+  } else {
+    results.set("2.4.7", { status: "pass" });
+  }
+
+  // 1.2.2 Captions — null means inapplicable (no videos), skip
+  if (checks.captionFailCount !== null) {
+    if (checks.captionFailCount > 0) {
+      const n = checks.captionFailCount;
+      results.set("1.2.2", { status: "fail", detail: `${n} ${plural(n, "video")} missing caption or subtitle tracks` });
+    } else {
+      results.set("1.2.2", { status: "pass" });
+    }
+  }
+
+  // Multimedia — N/A when no <video> or <audio> elements on the page
+  if (!checks.hasMedia) {
+    for (const id of ["1.2.1", "1.2.2", "1.2.3", "1.2.4", "1.2.5"]) {
+      if (!results.has(id)) {
+        results.set(id, { status: "not-applicable", detail: "No audio or video elements found on page" });
+      }
+    }
+  }
+
+  // Forms & Errors — N/A when no form fields on the page
+  if (!checks.hasFormFields) {
+    for (const id of ["1.3.5", "3.3.1", "3.3.2", "3.3.3", "3.3.4"]) {
+      results.set(id, { status: "not-applicable", detail: "No form fields found on page" });
+    }
+  }
+
+  // 2.1.1 Keyboard — null means inapplicable (no candidates), skip
+  if (checks.keyboardFailCount !== null) {
+    if (checks.keyboardFailCount > 0) {
+      const n = checks.keyboardFailCount;
+      results.set("2.1.1", { status: "fail", detail: `${n} interactive ${plural(n, "element")} not keyboard-accessible` });
+    } else {
+      results.set("2.1.1", { status: "pass" });
+    }
+  }
+
+  // 2. Process violations → "fail" (always takes precedence)
+  // Collect per-criterion violation summaries for detail text
+  const criterionViolations = new Map<string, { help: string; nodeCount: number }[]>();
 
   for (const violation of violations) {
-    // Strategy 1: Use the AXE_TO_WCAG mapping
+    const criteriaIds = new Set<string>();
+
     const mappedCriteria = AXE_TO_WCAG[violation.id];
     if (mappedCriteria) {
+      for (const id of mappedCriteria) criteriaIds.add(id);
+    }
+    for (const tag of violation.tags) {
+      const id = parseWcagTag(tag);
+      if (id) criteriaIds.add(id);
+    }
+
+    for (const criterionId of criteriaIds) {
+      results.set(criterionId, { status: "fail" });
+      const list = criterionViolations.get(criterionId) ?? [];
+      list.push({ help: violation.help, nodeCount: violation.nodes.length });
+      criterionViolations.set(criterionId, list);
+    }
+  }
+
+  // Attach detail text to axe violation failures
+  for (const [criterionId, violationList] of criterionViolations) {
+    const parts = violationList.map(
+      (v) => `${v.nodeCount} ${plural(v.nodeCount, "element")}: ${v.help}`,
+    );
+    const existing = results.get(criterionId);
+    if (existing) {
+      existing.detail = parts.join("; ");
+    }
+  }
+
+  // 3. Process passes → "pass" (only canAutoDetect, only if not already "fail")
+  for (const pass of passes) {
+    const mappedCriteria = AXE_TO_WCAG[pass.id];
+    if (mappedCriteria) {
       for (const criterionId of mappedCriteria) {
-        results.set(criterionId, "fail");
+        if (AUTO_DETECT_IDS.has(criterionId) && !results.has(criterionId)) {
+          results.set(criterionId, { status: "pass" });
+        }
       }
     }
 
-    // Strategy 2: Parse WCAG tags from the violation's tags array
-    for (const tag of violation.tags) {
+    for (const tag of pass.tags) {
       const criterionId = parseWcagTag(tag);
-      if (criterionId) {
-        results.set(criterionId, "fail");
+      if (criterionId && AUTO_DETECT_IDS.has(criterionId) && !results.has(criterionId)) {
+        results.set(criterionId, { status: "pass" });
       }
     }
   }

@@ -1,18 +1,21 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useScanStore } from "@/hooks/use-scan";
 import { useChecklistStore, useChecklistProgress } from "@/hooks/use-checklist";
 import { useTabStopsStore } from "@/hooks/use-tab-stops";
 import { useContrastStore } from "@/hooks/use-contrast";
-import { exportHTML, exportJSON, type ExportData } from "@/lib/export";
+import { buildCriterionHighlightMap } from "@/lib/checklist";
+import { exportHTML, exportJSON, type ExportData, type ChecklistExportEntry } from "@/lib/export";
 
 type Format = "html" | "json";
 
 export function ExportModal({ onClose }: { onClose: () => void }) {
   const violations = useScanStore((s) => s.violations);
+  const customChecks = useScanStore((s) => s.customChecks);
   const scanStatus = useScanStore((s) => s.status);
   const url = useScanStore((s) => s.url);
   const timestamp = useScanStore((s) => s.timestamp);
   const checklistStatuses = useChecklistStore((s) => s.statuses);
+  const autoDetails = useChecklistStore((s) => s.autoDetails);
   const checklistProgress = useChecklistProgress();
   const tabStops = useTabStopsStore((s) => s.stops);
   const tabStopsOrder = useTabStopsStore((s) => s.order);
@@ -20,6 +23,11 @@ export function ExportModal({ onClose }: { onClose: () => void }) {
   const tabStopsTraps = useTabStopsStore((s) => s.traps);
   const contrastAudit = useContrastStore((s) => s.auditResult);
   const contrastFixes = useContrastStore((s) => s.appliedFixes);
+
+  const highlightMap = useMemo(
+    () => buildCriterionHighlightMap(violations, customChecks),
+    [violations, customChecks],
+  );
 
   const hasScan = scanStatus === "complete";
   const hasChecklist = checklistProgress.tested > 0;
@@ -35,11 +43,27 @@ export function ExportModal({ onClose }: { onClose: () => void }) {
   const canExport = includeScan || includeChecklist || includeTabStops || includeContrast;
 
   function handleExport() {
+    // Build enriched checklist with details and element selectors
+    const checklist: Record<string, ChecklistExportEntry> = {};
+    if (includeChecklist) {
+      for (const [id, status] of Object.entries(checklistStatuses)) {
+        const entry: ChecklistExportEntry = { status };
+        if (autoDetails[id]) {
+          entry.detail = autoDetails[id];
+        }
+        const targets = highlightMap.get(id);
+        if (targets && targets.length > 0) {
+          entry.elements = targets.map((t) => t.selector);
+        }
+        checklist[id] = entry;
+      }
+    }
+
     const data: ExportData = {
       url: url ?? window.location.href,
       timestamp: timestamp ?? Date.now(),
       violations: includeScan ? violations : [],
-      checklistStatuses: includeChecklist ? checklistStatuses : {},
+      checklist,
       tabStops: includeTabStops
         ? { stops: tabStops, order: tabStopsOrder, originalOrder: tabStopsOriginalOrder, traps: tabStopsTraps }
         : undefined,

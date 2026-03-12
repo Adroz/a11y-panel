@@ -93,7 +93,7 @@ export const WCAG_CRITERIA: WcagCriterion[] = [
       "Verify captions are present and synchronized with the audio.",
       "Check that captions accurately represent all spoken dialogue and important sounds.",
     ],
-    canAutoDetect: false,
+    canAutoDetect: true,
   },
   {
     id: "1.2.3",
@@ -321,7 +321,7 @@ export const WCAG_CRITERIA: WcagCriterion[] = [
       "Verify no content is clipped, hidden, or overlapping after the overrides.",
       "Confirm all interactive elements remain usable and visible.",
     ],
-    canAutoDetect: false,
+    canAutoDetect: true,
   },
   {
     id: "1.4.13",
@@ -355,7 +355,7 @@ export const WCAG_CRITERIA: WcagCriterion[] = [
       "Verify all interactive elements (links, buttons, form controls, menus) can be reached and activated via keyboard.",
       "Confirm no functionality is only available via mouse hover, drag, or other pointer-specific interactions.",
     ],
-    canAutoDetect: false,
+    canAutoDetect: true,
   },
   {
     id: "2.1.2",
@@ -369,7 +369,7 @@ export const WCAG_CRITERIA: WcagCriterion[] = [
       "Verify you can always move focus away from any component using Tab, Shift+Tab, Escape, or Arrow keys.",
       "Pay special attention to modal dialogs, media players, embedded widgets, and custom components.",
     ],
-    canAutoDetect: true,
+    canAutoDetect: true, // detected via tab stop trap analysis, not axe-core
   },
   {
     id: "2.1.4",
@@ -473,7 +473,7 @@ export const WCAG_CRITERIA: WcagCriterion[] = [
       "Confirm the focus order matches the visual layout (left-to-right, top-to-bottom for LTR languages).",
       "Check that dynamically inserted content (modals, dropdowns) receives focus in a logical position.",
     ],
-    canAutoDetect: false,
+    canAutoDetect: true,
   },
   {
     id: "2.4.4",
@@ -529,7 +529,7 @@ export const WCAG_CRITERIA: WcagCriterion[] = [
       "Confirm focus indicators have sufficient contrast against the background.",
       "Check that custom focus styles are not suppressed with outline: none without providing an alternative.",
     ],
-    canAutoDetect: false,
+    canAutoDetect: true,
   },
 
   // 2.5 Input Modalities
@@ -573,7 +573,7 @@ export const WCAG_CRITERIA: WcagCriterion[] = [
       "Inspect each element's accessible name (via DevTools or screen reader) and verify it includes the visible label text.",
       "Check that aria-label or aria-labelledby values do not contradict or omit the visible text.",
     ],
-    canAutoDetect: true,
+    canAutoDetect: false, // axe rule is experimental, excluded by default
   },
   {
     id: "2.5.4",
@@ -757,7 +757,7 @@ export const WCAG_CRITERIA: WcagCriterion[] = [
       "Verify there are no duplicate ID values in the document.",
       "Confirm all elements have proper opening and closing tags and correct nesting.",
     ],
-    canAutoDetect: true,
+    canAutoDetect: false, // obsolete in WCAG 2.2; axe deprecated its rules
   },
   {
     id: "4.1.2",
@@ -785,6 +785,6 @@ export const WCAG_CRITERIA: WcagCriterion[] = [
       "Verify each uses an appropriate ARIA live region (role=\"status\", role=\"alert\", aria-live=\"polite\" or \"assertive\").",
       "Test with a screen reader to confirm status messages are announced without moving focus.",
     ],
-    canAutoDetect: true,
+    canAutoDetect: false, // no meaningful axe coverage for status messages
   },
 ];

@@ -1,6 +1,12 @@
-import { FAST_PASS_CONFIG, mapAxeResults } from "@/lib/scanner";
+import { FAST_PASS_CONFIG, mapAxeResults, mapAxePasses } from "@/lib/scanner";
 import { detectTextInImages } from "@/lib/scanner/text-in-image";
 import { IMPACT_ORDER } from "@/types/scan";
+import type { CustomCheckCounts } from "@/types/scan";
+import { checkTextSpacing } from "@/lib/scanner/checks/text-spacing";
+import { checkFocusOrder } from "@/lib/scanner/checks/focus-order";
+import { checkFocusVisible } from "@/lib/scanner/checks/focus-visible";
+import { checkCaptions } from "@/lib/scanner/checks/captions";
+import { checkKeyboard } from "@/lib/scanner/checks/keyboard";
 import { highlightElement, highlightAll, clearHighlights } from "@/lib/highlighter";
 import {
   getTabStops,
@@ -160,6 +166,7 @@ async function handleScan(sendResponse: (r: ResponseMessage) => void) {
     const axe = await import("axe-core");
     const results = await axe.default.run(document, FAST_PASS_CONFIG);
     const violations = mapAxeResults(results.violations);
+    const passes = mapAxePasses(results.passes);
 
     const textInImageViolation = await detectTextInImages();
     if (textInImageViolation) {
@@ -167,9 +174,40 @@ async function handleScan(sendResponse: (r: ResponseMessage) => void) {
       violations.sort((a, b) => IMPACT_ORDER[a.impact] - IMPACT_ORDER[b.impact]);
     }
 
+    // Run trap detection for 2.1.2 auto-populate (lightweight, no overlay)
+    const tabStops = getTabStops();
+    const traps = detectFocusTraps(tabStops);
+
+    // Run custom WCAG checks
+    const captionResult = checkCaptions();
+    const keyboardResult = checkKeyboard();
+    const textSpacingResult = checkTextSpacing();
+    const focusOrderResult = checkFocusOrder(tabStops);
+    const focusVisibleResult = checkFocusVisible(tabStops);
+
+    const customChecks: CustomCheckCounts = {
+      trapCount: traps.length,
+      textSpacingFailCount: textSpacingResult.failCount,
+      focusOrderInversionCount: focusOrderResult.inversions,
+      focusVisibleMissingCount: focusVisibleResult.missingCount,
+      captionFailCount: captionResult?.failCount ?? null,
+      keyboardFailCount: keyboardResult?.failCount ?? null,
+      // Presence detection for N/A auto-population
+      hasMedia: document.querySelectorAll("video, audio").length > 0,
+      hasFormFields: document.querySelectorAll("input:not([type='hidden']), select, textarea").length > 0,
+      // Selectors for on-page highlighting
+      trapSelectors: traps.map((t) => t.selector),
+      textSpacingSelectors: textSpacingResult.failingElements.map(generateSelector),
+      focusOrderSelectors: focusOrderResult.inversionIndices.map((i) => generateSelector(tabStops[i].element)),
+      focusVisibleSelectors: focusVisibleResult.failingElements.map(generateSelector),
+      keyboardSelectors: keyboardResult?.failingElements.map(generateSelector),
+    };
+
     sendResponse({
       type: "SCAN_COMPLETE",
       violations,
+      passes,
+      customChecks,
       url: window.location.href,
       timestamp: Date.now(),
     });

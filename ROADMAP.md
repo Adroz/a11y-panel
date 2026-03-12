@@ -54,6 +54,7 @@ Production readiness.
 
 - [x] HTML report export (self-contained styled report with violations + checklist)
 - [x] JSON report export
+- [x] Enriched checklist export — detail text and failing element selectors included in JSON and HTML reports
 - [x] Keyboard shortcut (Alt+Shift+A to run scan)
 - [x] Badge showing violation count on extension icon (red for issues, green checkmark for clean)
 - [x] Polished extension icons (shield with checkmark)
@@ -278,12 +279,35 @@ Flag images that likely contain text for WCAG 1.4.5 (Images of Text) review.
 - [x] Integration with checklist via `text-in-image` → 1.4.5 auto-populate mapping
 - [x] Plain language mode support
 
-## Phase 16 — Checklist Improvements
+## Phase 16 — Checklist Improvements ✅
 
 Refine the checklist workflow beyond the restructure.
 
-- [ ] Per-page checklist state (track progress per URL)
-- [ ] Better auto-populate accuracy and feedback
+- [x] Per-page checklist state (track progress per URL, origin+pathname matching)
+- [x] Legacy storage migration (flat key → per-URL key, one-time)
+- [x] Auto-populate pass results from scan (canAutoDetect criteria with no violations marked as "pass")
+- [x] Wire keyboard trap detection into scan for 2.1.2 auto-populate
+- [x] Clean up AXE_TO_WCAG mappings (remove dead/deprecated rules, remap duplicate-id-aria to 4.1.2)
+- [x] Correct canAutoDetect flags (2.5.3, 4.1.1, 4.1.3 → false)
+
+## Phase 16b — Custom WCAG Auto-Detection Checks ✅
+
+Extend the checklist auto-populate system with custom DOM checks for WCAG criteria that lack axe-core coverage.
+
+- [x] `CustomCheckCounts` interface replacing standalone `trapCount`
+- [x] Text Spacing (1.4.12) — inject CSS overrides, detect overflow clipping
+- [x] Focus Order (2.4.3) — compare tab stop order vs visual position
+- [x] Focus Visible (2.4.7) — snapshot visual properties at rest vs focused
+- [x] Captions (1.2.2) — check `<video>` elements for caption/subtitle tracks
+- [x] Keyboard (2.1.1) — detect interactive elements not keyboard-accessible
+- [x] Inapplicability handling — captions and keyboard return null when no candidates exist
+- [x] All 5 new checks integrated into scan pipeline and auto-populate mapping
+- [x] Custom check on-page highlighting — check modules return failing elements, converted to CSS selectors, merged into criterion highlight map
+- [x] Clickable element list in criterion card — click any flagged element to scroll + highlight on page (single element shown directly, 2+ elements collapsible)
+- [x] Banner dedup — suppress amber "N elements flagged" banner when autoDetail already shown
+- [x] "View in Tab Stops" button on 2.4.3 when focus order inversions detected
+- [x] Auto N/A for multimedia (1.2.1–1.2.5) when no `<video>`/`<audio>` elements on page
+- [x] Auto N/A for forms & errors (1.3.5, 3.3.1–3.3.4) when no form fields on page
 
 ## Phase 17 — Issue Navigator & Auto-Rescan
 

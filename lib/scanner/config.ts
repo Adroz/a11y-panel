@@ -5,5 +5,5 @@ export const FAST_PASS_CONFIG: RunOptions = {
     type: "tag",
     values: ["wcag2a", "wcag2aa", "wcag21aa", "best-practice"],
   },
-  resultTypes: ["violations"],
+  resultTypes: ["violations", "passes"],
 };

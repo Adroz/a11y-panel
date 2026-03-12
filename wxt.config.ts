@@ -6,7 +6,7 @@ export default defineConfig({
   manifest: {
     name: "A11y Checker",
     description: "Accessibility testing in your Chrome side panel — powered by axe-core",
-    permissions: ["sidePanel", "activeTab", "scripting", "storage"],
+    permissions: ["sidePanel", "activeTab", "scripting", "storage", "tabs"],
     side_panel: {
       default_path: "sidepanel.html",
     },

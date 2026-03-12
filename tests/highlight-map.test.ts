@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildCriterionHighlightMap } from "@/lib/checklist/criterion-highlights";
-import type { ScanViolation } from "@/types/scan";
+import type { ScanViolation, CustomCheckCounts } from "@/types/scan";
 
 function makeViolation(overrides: Partial<ScanViolation> = {}): ScanViolation {
   return {
@@ -89,5 +89,103 @@ describe("buildCriterionHighlightMap", () => {
     });
     const map = buildCriterionHighlightMap([violation]);
     expect(map.get("1.4.3")![0].impact).toBe("serious");
+  });
+});
+
+function makeCustomChecks(overrides: Partial<CustomCheckCounts> = {}): CustomCheckCounts {
+  return {
+    trapCount: 0,
+    textSpacingFailCount: 0,
+    focusOrderInversionCount: 0,
+    focusVisibleMissingCount: 0,
+    captionFailCount: null,
+    keyboardFailCount: null,
+    hasMedia: false,
+    hasFormFields: false,
+    ...overrides,
+  };
+}
+
+describe("buildCriterionHighlightMap — custom checks", () => {
+  it("adds trap selectors to 2.1.2 with critical impact", () => {
+    const customChecks = makeCustomChecks({
+      trapCount: 1,
+      trapSelectors: [".modal-trap"],
+    });
+    const map = buildCriterionHighlightMap([], customChecks);
+    expect(map.has("2.1.2")).toBe(true);
+    expect(map.get("2.1.2")).toHaveLength(1);
+    expect(map.get("2.1.2")![0]).toEqual({ selector: ".modal-trap", impact: "critical" });
+  });
+
+  it("adds text spacing selectors to 1.4.12 with moderate impact", () => {
+    const customChecks = makeCustomChecks({
+      textSpacingFailCount: 2,
+      textSpacingSelectors: [".tight-box", ".clipped-text"],
+    });
+    const map = buildCriterionHighlightMap([], customChecks);
+    expect(map.get("1.4.12")).toHaveLength(2);
+    expect(map.get("1.4.12")![0].impact).toBe("moderate");
+  });
+
+  it("adds focus order selectors to 2.4.3 with moderate impact", () => {
+    const customChecks = makeCustomChecks({
+      focusOrderInversionCount: 1,
+      focusOrderSelectors: ["#nav-link"],
+    });
+    const map = buildCriterionHighlightMap([], customChecks);
+    expect(map.get("2.4.3")).toHaveLength(1);
+    expect(map.get("2.4.3")![0].impact).toBe("moderate");
+  });
+
+  it("adds focus visible selectors to 2.4.7 with serious impact", () => {
+    const customChecks = makeCustomChecks({
+      focusVisibleMissingCount: 1,
+      focusVisibleSelectors: ["button.no-outline"],
+    });
+    const map = buildCriterionHighlightMap([], customChecks);
+    expect(map.get("2.4.7")).toHaveLength(1);
+    expect(map.get("2.4.7")![0].impact).toBe("serious");
+  });
+
+  it("adds keyboard selectors to 2.1.1 with serious impact", () => {
+    const customChecks = makeCustomChecks({
+      keyboardFailCount: 2,
+      keyboardSelectors: ["div.clickable", "span[role='button']"],
+    });
+    const map = buildCriterionHighlightMap([], customChecks);
+    expect(map.get("2.1.1")).toHaveLength(2);
+    expect(map.get("2.1.1")![0].impact).toBe("serious");
+  });
+
+  it("skips custom checks with empty selector arrays", () => {
+    const customChecks = makeCustomChecks({
+      trapSelectors: [],
+      textSpacingSelectors: [],
+    });
+    const map = buildCriterionHighlightMap([], customChecks);
+    expect(map.size).toBe(0);
+  });
+
+  it("skips custom checks with undefined selector arrays", () => {
+    const customChecks = makeCustomChecks();
+    const map = buildCriterionHighlightMap([], customChecks);
+    expect(map.size).toBe(0);
+  });
+
+  it("merges custom check selectors with axe violation targets for the same criterion", () => {
+    const violation = makeViolation({
+      id: "keyboard-trap",
+      tags: ["wcag212"],
+      nodes: [{ target: [".axe-trap"], html: "<div>", failureSummary: "" }],
+    });
+    const customChecks = makeCustomChecks({
+      trapCount: 1,
+      trapSelectors: [".custom-trap"],
+    });
+    const map = buildCriterionHighlightMap([violation], customChecks);
+    expect(map.get("2.1.2")!.length).toBe(2);
+    expect(map.get("2.1.2")!.map((t) => t.selector)).toContain(".axe-trap");
+    expect(map.get("2.1.2")!.map((t) => t.selector)).toContain(".custom-trap");
   });
 });

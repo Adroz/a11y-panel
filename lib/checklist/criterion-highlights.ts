@@ -1,4 +1,4 @@
-import type { ScanViolation } from "@/types/scan";
+import type { ScanViolation, Impact, CustomCheckCounts } from "@/types/scan";
 import type { HighlightTarget } from "@/types/messages";
 import { AXE_TO_WCAG } from "./auto-populate";
 
@@ -12,13 +12,32 @@ function parseWcagTag(tag: string): string | null {
   return `${match[1]}.${match[2]}.${match[3]}`;
 }
 
+function addCustomTargets(
+  map: Map<string, HighlightTarget[]>,
+  criterionId: string,
+  selectors: string[] | undefined,
+  impact: Impact,
+) {
+  if (!selectors?.length) return;
+  let targets = map.get(criterionId);
+  if (!targets) {
+    targets = [];
+    map.set(criterionId, targets);
+  }
+  for (const selector of selectors) {
+    targets.push({ selector, impact });
+  }
+}
+
 /**
  * Inverts scan violation data into a map from WCAG criterion ID → highlight targets.
  * For each violation, determines which criteria it maps to (via AXE_TO_WCAG + tag parsing),
  * then collects each affected node as a highlight target for that criterion.
+ * Also merges selectors from custom WCAG checks when provided.
  */
 export function buildCriterionHighlightMap(
   violations: ScanViolation[],
+  customChecks?: CustomCheckCounts,
 ): Map<string, HighlightTarget[]> {
   const map = new Map<string, HighlightTarget[]>();
 
@@ -47,6 +66,15 @@ export function buildCriterionHighlightMap(
         targets.push({ selector: node.target[0], impact: violation.impact });
       }
     }
+  }
+
+  // Merge custom check selectors
+  if (customChecks) {
+    addCustomTargets(map, "2.1.2", customChecks.trapSelectors, "critical");
+    addCustomTargets(map, "1.4.12", customChecks.textSpacingSelectors, "moderate");
+    addCustomTargets(map, "2.4.3", customChecks.focusOrderSelectors, "moderate");
+    addCustomTargets(map, "2.4.7", customChecks.focusVisibleSelectors, "serious");
+    addCustomTargets(map, "2.1.1", customChecks.keyboardSelectors, "serious");
   }
 
   return map;

@@ -1,4 +1,4 @@
-import type { Impact, ScanViolation } from "./scan";
+import type { Impact, ScanViolation, ScanPass, CustomCheckCounts } from "./scan";
 import type { ContrastAuditResult, ContrastPickerResult } from "./contrast";
 import type { InspectorResult } from "./inspector";
 
@@ -51,7 +51,7 @@ export type RequestMessage =
 // Content Script → Background → Side Panel
 export type ResponseMessage =
   | { type: "SCAN_STARTED" }
-  | { type: "SCAN_COMPLETE"; violations: ScanViolation[]; url: string; timestamp: number }
+  | { type: "SCAN_COMPLETE"; violations: ScanViolation[]; passes: ScanPass[]; customChecks: CustomCheckCounts; url: string; timestamp: number }
   | { type: "SCAN_ERROR"; error: string }
   | { type: "HIGHLIGHT_APPLIED"; selector: string }
   | { type: "HIGHLIGHTS_APPLIED"; count: number }

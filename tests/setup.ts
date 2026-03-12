@@ -6,6 +6,7 @@ const chromeMock = {
     local: {
       get: vi.fn().mockResolvedValue({}),
       set: vi.fn().mockResolvedValue(undefined),
+      remove: vi.fn().mockResolvedValue(undefined),
     },
   },
   runtime: {
@@ -17,6 +18,18 @@ const chromeMock = {
       removeListener: vi.fn(),
     },
     lastError: null,
+  },
+  tabs: {
+    query: vi.fn().mockResolvedValue([]),
+    get: vi.fn().mockResolvedValue({}),
+    onActivated: {
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+    },
+    onUpdated: {
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+    },
   },
 };
 

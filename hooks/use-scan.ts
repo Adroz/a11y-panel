@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ScanViolation, Impact } from "@/types/scan";
+import type { ScanViolation, ScanPass, Impact, CustomCheckCounts } from "@/types/scan";
 import type { HighlightTarget, ResponseMessage } from "@/types/messages";
 import type { FilterState, WcagCategory } from "@/lib/filters";
 import { applyFilters } from "@/lib/filters";
@@ -11,6 +11,8 @@ interface ScanState {
   // Scan
   status: ScanStatus;
   violations: ScanViolation[];
+  passes: ScanPass[];
+  customChecks: CustomCheckCounts;
   url: string | null;
   timestamp: number | null;
   error: string | null;
@@ -41,6 +43,17 @@ interface ScanState {
 export const useScanStore = create<ScanState>((set, get) => ({
   status: "idle",
   violations: [],
+  passes: [],
+  customChecks: {
+    trapCount: 0,
+    textSpacingFailCount: 0,
+    focusOrderInversionCount: 0,
+    focusVisibleMissingCount: 0,
+    captionFailCount: null,
+    keyboardFailCount: null,
+    hasMedia: false,
+    hasFormFields: false,
+  },
   url: null,
   timestamp: null,
   error: null,
@@ -76,6 +89,8 @@ export const useScanStore = create<ScanState>((set, get) => ({
         set({
           status: "complete",
           violations: response.violations,
+          passes: response.passes,
+          customChecks: response.customChecks,
           url: response.url,
           timestamp: response.timestamp,
           error: null,
@@ -149,6 +164,15 @@ export const useScanStore = create<ScanState>((set, get) => ({
     set({
       status: "idle",
       violations: [],
+      passes: [],
+      customChecks: {
+        trapCount: 0,
+        textSpacingFailCount: 0,
+        focusOrderInversionCount: 0,
+        focusVisibleMissingCount: 0,
+        captionFailCount: null,
+        keyboardFailCount: null,
+      },
       url: null,
       timestamp: null,
       error: null,

@@ -5,11 +5,17 @@ import type { ContrastAuditResult, AppliedFix } from "@/types/contrast";
 // Defined locally to avoid circular imports with hooks
 type CheckStatus = "untested" | "pass" | "fail" | "not-applicable";
 
+export interface ChecklistExportEntry {
+  status: CheckStatus;
+  detail?: string;
+  elements?: string[];
+}
+
 export interface ExportData {
   url: string;
   timestamp: number;
   violations: ScanViolation[];
-  checklistStatuses: Record<string, CheckStatus>;
+  checklist: Record<string, ChecklistExportEntry>;
   tabStops?: {
     stops: SerializedTabStop[];
     order: string[];
@@ -289,7 +295,7 @@ function buildTabStopsSection(tabStops: ExportData["tabStops"]): string {
 // ---------------------------------------------------------------------------
 
 export function exportHTML(data: ExportData): void {
-  const { url, timestamp, violations, checklistStatuses, tabStops, contrastAudit, contrastFixes } = data;
+  const { url, timestamp, violations, checklist, tabStops, contrastAudit, contrastFixes } = data;
 
   // Summary counts — count nodes (issues), not rules, to match UI
   const ruleCount = violations.length;
@@ -306,9 +312,9 @@ export function exportHTML(data: ExportData): void {
   }
 
   // Checklist — determine if any criteria have been tested
-  const checklistEntries = Object.entries(checklistStatuses);
+  const checklistEntries = Object.entries(checklist);
   const hasTestedCriteria = checklistEntries.some(
-    ([, status]) => status !== "untested",
+    ([, entry]) => entry.status !== "untested",
   );
 
   // Build violation cards
@@ -358,14 +364,23 @@ export function exportHTML(data: ExportData): void {
   let checklistSection = "";
   if (hasTestedCriteria) {
     const rows = checklistEntries
-      .map(([criterionId, status]) => {
-        const color = STATUS_COLORS[status as CheckStatus];
-        const label = STATUS_LABELS[status as CheckStatus];
+      .map(([criterionId, entry]) => {
+        const color = STATUS_COLORS[entry.status];
+        const label = STATUS_LABELS[entry.status];
+        const detailHtml = entry.detail
+          ? `<div style="font-size:12px;color:#6b7280;margin-top:2px;">${escapeHtml(entry.detail)}</div>`
+          : "";
+        const elementsHtml = entry.elements && entry.elements.length > 0
+          ? `<div style="margin-top:4px;">${entry.elements.map((el) =>
+              `<code style="display:block;font-size:11px;color:#6b7280;background:#f3f4f6;padding:1px 4px;border-radius:3px;margin-top:2px;">${escapeHtml(el)}</code>`
+            ).join("")}</div>`
+          : "";
         return `
           <tr>
             <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:14px;font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;color:#1f2937;">${escapeHtml(criterionId)}</td>
             <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">
               <span style="display:inline-block;padding:2px 10px;border-radius:9999px;font-size:12px;font-weight:600;color:#fff;background:${color};">${escapeHtml(label)}</span>
+              ${detailHtml}${elementsHtml}
             </td>
           </tr>`;
       })
