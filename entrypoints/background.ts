@@ -60,28 +60,6 @@ async function forwardToActiveTab(message: Message, sendResponse: (r: ResponseMe
       return;
     }
 
-    // Check if content script is loaded on this page
-    try {
-      const [{ result: isReady }] = await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: () => (window as any).__a11yPanelReady === true,
-      });
-
-      if (!isReady) {
-        sendResponse({
-          type: "SCAN_ERROR",
-          error: "Content script not loaded. Try refreshing the page.",
-        });
-        return;
-      }
-    } catch {
-      sendResponse({
-        type: "SCAN_ERROR",
-        error: "Cannot scan this page. Try a regular web page.",
-      });
-      return;
-    }
-
     const response = await chrome.tabs.sendMessage(tab.id, message);
 
     // Persist scan results to history and update badge
@@ -96,10 +74,16 @@ async function forwardToActiveTab(message: Message, sendResponse: (r: ResponseMe
 
     sendResponse(response);
   } catch (err) {
-    sendResponse({
-      type: "SCAN_ERROR",
-      error: err instanceof Error ? err.message : String(err),
-    });
+    const msg = err instanceof Error ? err.message : String(err);
+    // Content script not available — restricted page (chrome://) or not yet loaded
+    if (msg.includes("Receiving end does not exist") || msg.includes("Could not establish connection")) {
+      sendResponse({
+        type: "SCAN_ERROR",
+        error: "Cannot scan this page. Try a regular web page, or refresh the page.",
+      });
+    } else {
+      sendResponse({ type: "SCAN_ERROR", error: msg });
+    }
   }
 }
 

@@ -37,8 +37,6 @@ export default defineContentScript({
   matches: ["<all_urls>"],
   runAt: "document_idle",
   main(_ctx) {
-    (window as any).__a11yPanelReady = true;
-
     chrome.runtime.onMessage.addListener(
       (message: Message, _sender, sendResponse: (r: ResponseMessage) => void) => {
         switch (message.type) {
